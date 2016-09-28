@@ -1,5 +1,5 @@
 <?php
-namespace services\exceptionHandler;
+namespace wiggum\services\exceptionHandler;
 
 use \UnexpectedValueException;
 use \wiggum\commons\Handler;

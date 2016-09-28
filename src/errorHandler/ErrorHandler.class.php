@@ -1,5 +1,5 @@
 <?php
-namespace services\errorHandler;
+namespace wiggum\services\errorHandler;
 
 use \wiggum\commons\Handler;
 use \wiggum\http\Request;

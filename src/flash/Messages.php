@@ -1,5 +1,5 @@
 <?php
-namespace services\flash;
+namespace wiggum\services\flash;
 
 use \ArrayAccess;
 use \RuntimeException;
