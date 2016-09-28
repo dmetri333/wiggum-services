@@ -1,7 +1,6 @@
-
 {
 	"name": "wiggum/services/db",
 	"autoload": {
-		"psr-4": {"wiggum\\services\\db\\": "src/db/"}
+		"psr-4": {"wiggum\\services\\db\\": ""}
 	}
 }

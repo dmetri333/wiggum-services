@@ -1,0 +1,6 @@
+{
+	"name": "wiggum/services",
+	"replace": {
+		"wiggum/services/db": "self.version"
+	}
+}
