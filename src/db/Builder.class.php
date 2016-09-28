@@ -1,5 +1,5 @@
 <?php
-namespace wiggum\db;
+namespace wiggum\services\db;
 
 use \PDO;
 use \Closure;

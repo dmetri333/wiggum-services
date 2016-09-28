@@ -1,5 +1,5 @@
 <?php
-namespace services\db;
+namespace wiggum\services\db;
 
 use \PDO;
 
