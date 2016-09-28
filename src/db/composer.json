@@ -1,0 +1,7 @@
+{
+    "name": "wiggum/services/db",
+    "type": "library",
+    "autoload": {
+        "psr-4": { "wiggum\\services\\db\\": "" }
+    }
+}
