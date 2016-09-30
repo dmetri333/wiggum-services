@@ -16,8 +16,8 @@ class ErrorHandler extends Handler {
 	 */
 	public function __construct(\wiggum\foundation\Application $app) {
 		$this->basePath = $app->getBasePath();
-		$this->verboseMode = $app->settings->get('config.environment', 'development') == 'development' ? true : false;
-		$this->templates = $app->settings->get('services.errorHandler', []);
+		$this->verboseMode = $app->config->get('app.environment', 'development') == 'development' ? true : false;
+		$this->templates = $app->config->get('services.errorHandler', []);
 	}
 	
 	/**
