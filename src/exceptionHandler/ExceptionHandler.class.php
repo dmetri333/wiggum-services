@@ -9,6 +9,7 @@ use \wiggum\http\Response;
 
 class ExceptionHandler extends Handler {
 	
+	private $basePath;
 	private $verboseMode;
 	private $templates;
 	
@@ -16,6 +17,7 @@ class ExceptionHandler extends Handler {
 	 *
 	 */
 	public function __construct(\wiggum\foundation\Application $app) {
+		$this->basePath = $app->getBasePath();
 		$this->verboseMode = $app->settings->get('config.environment', 'development') == 'development' ? true : false;
 		$this->templates = $app->settings->get('services.exceptionHandler', []);
 	}
@@ -79,8 +81,8 @@ class ExceptionHandler extends Handler {
 			}
 		}
 		
-		$tpl = new Template('');
-		$tpl->setTemplatePath(BASE_PATH . '/' . $template);
+		$tpl = new Template('', '');
+		$tpl->setTemplatePath($this->basePath . '/' . $template);
 	
 		$tpl->set('error', $error);
 		$tpl->set('verboseMode', $this->verboseMode);

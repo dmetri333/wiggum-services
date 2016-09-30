@@ -8,12 +8,14 @@ use \wiggum\commons\template\Template;
 
 class ErrorHandler extends Handler {
 	
+	private $basePath;
 	private $verboseMode; 
 	private $templates;
 	
 	/**
 	 */
 	public function __construct(\wiggum\foundation\Application $app) {
+		$this->basePath = $app->getBasePath();
 		$this->verboseMode = $app->settings->get('config.environment', 'development') == 'development' ? true : false;
 		$this->templates = $app->settings->get('services.errorHandler', []);
 	}
@@ -67,8 +69,8 @@ class ErrorHandler extends Handler {
 		if (!isset($this->templates[$type]))
 			throw new UnexpectedValueException('Cannot render template type "' . $type . '"');
 		
-		$tpl = new Template('');
-		$tpl->setTemplatePath(BASE_PATH . '/' . $this->templates[$type]);
+		$tpl = new Template('', '');
+		$tpl->setTemplatePath($this->basePath . '/' . $this->templates[$type]);
 		
 		$tpl->set('error', $error);
 		$tpl->set('verboseMode', $this->verboseMode);
