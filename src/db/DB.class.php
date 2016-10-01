@@ -9,8 +9,8 @@ class DB {
 	private $transactionError = false;
 	
 	/**
-	 * (non-PHPdoc)
-	 * @see \wiggum\model\Extension::init()
+	 * 
+	 * @param array $config
 	 */
 	public function __construct($config) {
 		$this->connect($config['protocol'], $config['username'], $config['password'], $config['url'], $config['name']);

@@ -9,7 +9,7 @@ use \wiggum\http\Response;
 
 class ExceptionHandler extends Handler {
 	
-	private $basePath;
+	private $app;
 	private $verboseMode;
 	private $templates;
 	
@@ -17,7 +17,7 @@ class ExceptionHandler extends Handler {
 	 *
 	 */
 	public function __construct(\wiggum\foundation\Application $app) {
-		$this->basePath = $app->getBasePath();
+		$this->app = $app;
 		$this->verboseMode = $app->config->get('app.environment', 'development') == 'development' ? true : false;
 		$this->templates = $app->config->get('services.exceptionHandler', []);
 	}
@@ -77,13 +77,14 @@ class ExceptionHandler extends Handler {
 			if (isset($this->templates[$type][$error->getCode()])) {
 				$template = $this->templates[$type][$error->getCode()];
 			} else {
-				throw new UnexpectedValueException('Cannot render template error code "' . $error->getCode() . '"');
+				$template = $this->templates[$type][500];
 			}
 		}
 		
 		$tpl = new Template('', '');
-		$tpl->setTemplatePath($this->basePath . '/' . $template);
+		$tpl->setTemplatePath($template);
 	
+		$tpl->set('app', $this->app);
 		$tpl->set('error', $error);
 		$tpl->set('verboseMode', $this->verboseMode);
 	
