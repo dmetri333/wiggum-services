@@ -74,4 +74,28 @@ class Messages {
 		return (isset($this->fromPrevious[$key])) ? $this->fromPrevious[$key] : null;
 	}
 	
+	/**
+	 * 
+	 * @param string $message
+	 */
+	public function addSuccessMessage($message) {
+		$this->addMessage('success', $message);
+	}
+	
+	/**
+	 *
+	 * @param string $message
+	 */
+	public function addWarningMessage($message) {
+		$this->addMessage('warning', $message);
+	}
+	
+	/**
+	 *
+	 * @param string $message
+	 */
+	public function addErrorMessage($message) {
+		$this->addMessage('error', $message);
+	}
+	
 }
