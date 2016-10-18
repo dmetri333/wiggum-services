@@ -27,7 +27,7 @@ class DB {
 	/**
 	 * 
 	 * @param string $table
-	 * @return \wiggum\db\Builder
+	 * @return \wiggum\services\db\Builder
 	 */
 	public function table($table) {
 		$query = new Builder($this, new Grammar());
