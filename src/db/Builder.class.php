@@ -566,26 +566,23 @@ class Builder {
 		return (int) $this->aggregate('count', $columns);
 	}
 	
-	// TODO - add more aggregates
-	/*	
-	public function min($column) {
-		return $this->aggregate('min', array($column));
-	}
-	
-	public function max($column) {
-		return $this->aggregate('max', array($column));
-	}
-	
 	public function sum($column) {
-		$result = $this->aggregate('sum', array($column));
+		$result = $this->aggregate('sum', [$column]);
 	
 		return $result ?: 0;
 	}
 	
-	public function avg($column) {
-		return $this->aggregate('avg', array($column));
+	public function min($column) {
+		return $this->aggregate('min', [$column]);
 	}
-	*/	
+	
+	public function max($column) {
+		return $this->aggregate('max', [$column]);
+	}
+	
+	public function avg($column) {
+		return $this->aggregate('avg', [$column]);
+	}
 	
 	/**
 	 * 
