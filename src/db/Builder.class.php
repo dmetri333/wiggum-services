@@ -300,6 +300,12 @@ class Builder {
 			return $this;
 		}
 	
+		// If the columns is actually a Closure instance, we will assume 
+		// a nested where statement which is wrapped in parenthesis.
+		if ($column instanceof Closure) {
+			return $this->whereNested($column, $boolean);
+		}
+		
 		// If the value is "null", we will just assume the developer wants to add a
 		// where null clause to the query. So, we will allow a short-cut here to
 		// that method for convenience so the developer doesn't have to check.
@@ -315,6 +321,38 @@ class Builder {
 		$this->wheres[] = compact('type', 'column', 'operator', 'value', 'boolean');
 		$this->addBinding($value, 'where');
 		
+		return $this;
+	}
+	
+		/**
+	 * 
+	 * @param Closure $callback
+	 * @param string $boolean
+	 * @return \wiggum\db\Builder
+	 */
+	public function whereNested(Closure $callback, $boolean = 'and') {
+		$query = (new static($this->db, $this->grammar))->from($this->from);
+	
+		call_user_func($callback, $query);
+	
+		return $this->addNestedWhereQuery($query, $boolean);
+	}
+	
+	/**
+	 *
+	 * @param  \wiggum\db\Builder $query
+	 * @param  string  $boolean
+	 * @return $this
+	 */
+	public function addNestedWhereQuery($query, $boolean = 'and') {
+		if (count($query->wheres)) {
+			$type = 'Nested';
+	
+			$this->wheres[] = compact('type', 'query', 'boolean');
+	
+			$this->addBinding($query->getBindings(), 'where');
+		}
+	
 		return $this;
 	}
 	
