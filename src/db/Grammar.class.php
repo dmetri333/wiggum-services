@@ -197,6 +197,18 @@ class Grammar {
 	}
 	
 	/**
+	 * 
+	 * @param Builder $query
+	 * @param array $where
+	 * @return string
+	 */
+	protected function whereNested(Builder $query, $where) {
+		$nested = $where['query'];
+	
+		return '('.substr($this->compileWheres($nested), 6).')';
+	}
+	
+	/**
 	 * Compile a basic where clause.
 	 *
 	 * @param Builder $query
