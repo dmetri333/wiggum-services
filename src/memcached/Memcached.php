@@ -1,5 +1,5 @@
 <?php
-namespace app\services\memcached;
+namespace wiggum\services\memcached;
 
 class Memcached {
 	
