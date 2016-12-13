@@ -417,6 +417,14 @@ class Grammar {
 		
 	}
 	
+	/**
+	 * Compile the query to determine the list of columns.
+	 *
+	 * @return string
+	 */
+	public function compileColumnExists() {
+		return 'select column_name from information_schema.columns where table_name = ?';
+	}
 
 	// Helper methods
 	
