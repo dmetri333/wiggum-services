@@ -651,6 +651,16 @@ class Builder {
 	}
 	
 	/**
+	 * 
+	 * @return array
+	 */
+	public function getColumnListing() {
+		$sql = $this->grammar->compileColumnExists();
+		
+		return $this->db->fetchRows($sql, [$this->from[0]], PDO::FETCH_COLUMN);
+	}
+	
+	/**
 	 * Add a binding to the query.
 	 *
 	 * @param  mixed   $value
