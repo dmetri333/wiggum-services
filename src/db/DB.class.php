@@ -51,7 +51,7 @@ class DB {
 			$pdo->exec('SET NAMES utf8');
 		} catch (PDOException $e) {
 			$pdo = null;
-			//Logger::error($e->getMessage(), __CLASS__);
+			
 			throw new InternalErrorException('Database failed to connect');
 		}
 		$this->pdo = $pdo;
@@ -66,7 +66,7 @@ class DB {
 			$this->pdo->beginTransaction();
 			return true;
 		} catch (PDOException $e) {
-			//Logger::error($e->getMessage(), __CLASS__);
+			error_log($e->getMessage());
 		}
 		return false;
 	}
@@ -81,7 +81,7 @@ class DB {
 			$this->pdo->rollBack();
 			return true;
 		} catch (PDOException $e) {
-			//Logger::error($e->getMessage(), __CLASS__);
+			error_log($e->getMessage());
 		}
 		return false;
 	}
@@ -103,7 +103,7 @@ class DB {
 			$this->pdo->commit();
 			return true;
 		} catch (PDOException $e) {
-			//Logger::error($e->getMessage(), __CLASS__);
+			error_log($e->getMessage());
 		}
 		return false;
 	}
@@ -128,10 +128,10 @@ class DB {
 				if (!$obj) return null;
 			} else {
 				$errorInfo = $statement->errorInfo();
-				//Logger::error($errorInfo[2], __CLASS__);
+				error_log($errorInfo[2]);
 			}
 		} catch (PDOException $e) {
-			//Logger::error($e->getMessage(), __CLASS__);
+			error_log($e->getMessage());
 		}
 		return $obj;
 	}
@@ -158,10 +158,11 @@ class DB {
 						$objects[] = clone $obj;
 				}
 			} else {
-				//Logger::error('Error exec statement' , __CLASS__);
+				$errorInfo = $statement->errorInfo();
+				error_log($errorInfo[2]);
 			}
 		} catch (PDOException $e) {
-			//Logger::error($e->getMessage(), __CLASS__);
+			error_log($e->getMessage());
 		}
 		return $objects;
 	
@@ -183,10 +184,10 @@ class DB {
 				if ($row === false) $row = null;
 			} else {
 				$errorInfo = $statement->errorInfo();
-				//Logger::error($errorInfo[2], __CLASS__);
+				error_log($errorInfo[2]);
 			}
 		} catch (PDOException $e) {
-			//Logger::error($e->getMessage(), __CLASS__);
+			error_log($e->getMessage());
 		}
 		return $row;
 	}
@@ -206,10 +207,10 @@ class DB {
 				$rows = $statement->fetchAll($fetchMode);
 			} else {
 				$errorInfo = $statement->errorInfo();
-				//Logger::error($errorInfo[2], __CLASS__);
+				error_log($errorInfo[2]);
 			}
 		} catch (PDOException $e) {
-			//Logger::error($e->getMessage(), __CLASS__);
+			error_log($e->getMessage());
 		}
 		return $rows;
 	}
@@ -231,10 +232,10 @@ class DB {
 				if (!$col) return null;
 			} else {
 				$errorInfo = $statement->errorInfo();
-				//Logger::error($errorInfo[2], __CLASS__);
+				error_log($errorInfo[2]);
 			}
 		} catch (PDOException $e) {
-			//Logger::error($e->getMessage(), __CLASS__);
+			error_log($e->getMessage());
 		}
 		return $col;
 	}
@@ -259,11 +260,11 @@ class DB {
 			} else {
 				$this->transactionError = true;
 				$errorInfo = $statement->errorInfo();
-				//Logger::error($errorInfo[2], __CLASS__);
+				error_log($errorInfo[2]);
 			}
 		} catch (PDOException $e) {
 			$this->transactionError = true;
-			//Logger::error($e->getMessage(), __CLASS__);
+			error_log($e->getMessage());
 		}
 		return $result;
 	}
