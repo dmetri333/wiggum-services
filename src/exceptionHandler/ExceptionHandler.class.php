@@ -9,9 +9,9 @@ use \wiggum\http\Response;
 
 class ExceptionHandler extends Handler {
 	
-	private $app;
-	private $verboseMode;
-	private $templates;
+	protected $app;
+	protected $verboseMode;
+	protected $templates;
 	
 	/**
 	 *
