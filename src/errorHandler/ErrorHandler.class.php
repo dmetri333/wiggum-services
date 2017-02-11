@@ -8,9 +8,9 @@ use \wiggum\commons\template\Template;
 
 class ErrorHandler extends Handler {
 	
-	private $app;
-	private $verboseMode; 
-	private $templates;
+	protected $app;
+	protected $verboseMode; 
+	protected $templates;
 	
 	/**
 	 */
