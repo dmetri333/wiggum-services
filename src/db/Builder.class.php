@@ -505,6 +505,24 @@ class Builder {
 	}
 	
 	/**
+	 * Fetch all values of a single column from the result set into an array.
+	 *
+	 * @return array
+	 */
+	public function fetchAllColumn() {
+		return $this->db->fetchRows($this->toSql(), $this->getBindings(), PDO::FETCH_COLUMN);
+	}
+	
+	/**
+	 * Fetch a single value from first column in the next row of a result set.
+	 *
+	 * @return string
+	 */
+	public function fetchValue() {
+		return $this->db->fetchColumn($this->toSql(), $this->getBindings());
+	}
+	
+	/**
 	 * 
 	 * @param string $columnKey
 	 * @param boolean $assoc
