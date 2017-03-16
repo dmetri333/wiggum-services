@@ -74,8 +74,9 @@ class ExceptionHandler extends Handler {
 		$template = $this->templates[$type];
 		
 		if (is_array($this->templates[$type]))	{
-			if (isset($this->templates[$type][$error->getCode()])) {
-				$template = $this->templates[$type][$error->getCode()];
+			$templateKey = property_exists($error, 'template') ? $error->template : $error->getCode();
+			if (isset($this->templates[$type][$templateKey])) {
+				$template = $this->templates[$type][$templateKey];
 			} else {
 				$template = $this->templates[$type][500];
 			}
