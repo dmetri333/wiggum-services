@@ -1,5 +1,8 @@
 {
 	"name": "wiggum/services",
+	"require" : {
+		"char0n/ffmpeg-php": "dev-master"
+	},
 	"autoload": {
 		"psr-4": {"wiggum\\services\\": "src/"}
 	}
