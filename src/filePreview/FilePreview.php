@@ -254,7 +254,7 @@ class FilePreview {
 	 	return [
 	 			'filename' => $pathInfo['basename'],
 	 			'name' => $pathInfo['filename'],
-	 			'path' => $pathInfo['dirname'],
+	 			'path' => $pathInfo['dirname'].DIRECTORY_SEPARATOR,
 	 			'extension' => $pathInfo['extension'],
 	 			'width' => isset($width) ? $width : '',
 	 			'height' => isset($height) ? $height : '',
