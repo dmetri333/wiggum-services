@@ -466,7 +466,7 @@ class Grammar {
 	private function wrapValue($value) {
 		if ($value === '*') return $value;
 	
-		return '`'.$value.'`';
+		return '`'.str_replace('`', '', $value).'`';
 	}
 	
 	/**
