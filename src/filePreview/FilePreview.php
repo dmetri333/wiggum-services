@@ -152,7 +152,7 @@ class FilePreview {
 		// add a white background in case the page is transparent
 		$imagick->setImageBackgroundColor('white');
 
-		//$imagick->readImage($fileInput . '[0]');
+		$imagick= $imagick->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
 		
 		// rotate based on exif data
 		$this->autorotate($imagick);
