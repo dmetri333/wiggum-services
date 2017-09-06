@@ -147,12 +147,12 @@ class FilePreview {
 	private function processImage($fileInput, $fileOutput, $width, $height) {
 		// image magick
 
-		$imagick = new Imagick();
+		$imagick = new Imagick($fileInput . '[0]');
 
 		// add a white background in case the page is transparent
 		$imagick->setImageBackgroundColor('white');
 
-		$imagick->readImage($fileInput . '[0]');
+		//$imagick->readImage($fileInput . '[0]');
 		
 		// rotate based on exif data
 		$this->autorotate($imagick);
