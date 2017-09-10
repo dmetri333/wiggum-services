@@ -2,6 +2,7 @@
 namespace wiggum\services\db;
 
 use \PDO;
+use \PDOException;
 
 class DB {
 	
@@ -13,7 +14,7 @@ class DB {
 	 * @param array $config
 	 */
 	public function __construct($config) {
-		$this->connect($config['protocol'], $config['username'], $config['password'], $config['url'], $config['name'], $config['port']);
+		$this->connect($config['protocol'], $config['username'], $config['password'], $config['url'], $config['name'], $config['port'], $config['characterSet']);
 	}
 	
 	/**
@@ -39,16 +40,20 @@ class DB {
 	 *
 	 * @param string $protocol
 	 * @param string $user
+	 * @param string $password
 	 * @param string $url
-	 * @param string $database
+	 * @param string $name
+	 * @param string $port [3306]
+	 * @param string $characterSet ['utf8']
+	 * 
 	 * @return /PDO
 	 */
-	public function connect($protocol, $user, $password, $url, $name, $port = 3306) {
+	public function connect($protocol, $user, $password, $url, $name, $port = 3306, $characterSet = 'utf8') {
 		$pdo = null;
 		try {
 			$options = array(PDO::ATTR_PERSISTENT => true);
 			$pdo = new PDO("{$protocol}:host={$url};port={$port};dbname={$name}", $user, $password, $options);
-			$pdo->exec('SET NAMES utf8');
+			$pdo->exec('SET NAMES '.$characterSet)
 		} catch (PDOException $e) {
 			$pdo = null;
 			
