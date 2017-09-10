@@ -53,7 +53,7 @@ class DB {
 		try {
 			$options = array(PDO::ATTR_PERSISTENT => true);
 			$pdo = new PDO("{$protocol}:host={$url};port={$port};dbname={$name}", $user, $password, $options);
-			$pdo->exec('SET NAMES '.$characterSet)
+			$pdo->exec('SET NAMES '.$characterSet);
 		} catch (PDOException $e) {
 			$pdo = null;
 			
