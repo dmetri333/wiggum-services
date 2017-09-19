@@ -14,6 +14,9 @@ class DB {
 	 * @param array $config
 	 */
 	public function __construct($config) {
+		$port = isset($config['port']) ? $config['port'] : '3306';
+		$characterSet = isset($config['characterSet']) ? $config['characterSet'] : 'utf8';
+
 		$this->connect($config['protocol'], $config['username'], $config['password'], $config['url'], $config['name'], $config['port'], $config['characterSet']);
 	}
 	
