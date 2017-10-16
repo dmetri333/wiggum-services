@@ -1,9 +1,12 @@
 {
-	"name": "wiggum/services",
+	"name" : "wiggum/services",
 	"require" : {
-		"char0n/ffmpeg-php": "2.9.0"
+		"char0n/ffmpeg-php" : "2.9.0",
+		"nikic/fast-route": "^1.0"
 	},
-	"autoload": {
-		"psr-4": {"wiggum\\services\\": "src/"}
+	"autoload" : {
+		"psr-4" : {
+			"wiggum\\services\\" : "src/"
+		}
 	}
 }
