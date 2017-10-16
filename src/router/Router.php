@@ -4,23 +4,11 @@ namespace wiggum\services\router;
 use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;
 use wiggum\exceptions\PageNotFoundException;
-use wiggum\foundation\Application;
 use wiggum\http\Request;
 use wiggum\http\Response;
+use wiggum\exceptions\HTTPException;
 
-class Router {
-	
-	private $app;
-	private $routes;
-	
-	/**
-	 * 
-	 * @param array $app
-	 */
-	public function __construct(Application $app) {
-		$this->app = $app;
-		$this->routes = $this->app->getRoutes();
-	}
+class Router extends \wiggum\foundation\Router {
 	
 	/**
 	 * 
@@ -29,63 +17,43 @@ class Router {
 	 * @throws PageNotFoundException
 	 */
 	public function process(Request $request, Response $response) {
-        $actions = $this->parseURL($request);
+        $actions = null;
 	    
-	    if (!isset($actions))
-	        throw new PageNotFoundException();
-	        
-	    if (!isset($actions['classPath']))
-	        throw new PageNotFoundException();
-	            
-	    $controller = new $actions['classPath']($this->app);
-	            
-        if (isset($actions['parameters'])) {
-            $request->setParameters(array_merge($request->getParameters(), $actions['parameters']));
-        }
-	            
-        if (isset($actions['properties'])) {
-            foreach ($actions['properties'] as $property => $value) {
-                $controller->{$property} = $value;
+        $routeDefinitionCallback = function (RouteCollector $r) {
+            foreach ($this->routes as $route) {
+                $r->addRoute($route['methods'], $route['pattern'], $route['route']);
             }
+        };
+        
+        $dispatcher = \FastRoute\simpleDispatcher($routeDefinitionCallback);
+        
+        $routeInfo = $dispatcher->dispatch($request->getMethod(), $request->getContextPath());
+       
+        switch ($routeInfo[0]) {
+            case Dispatcher::NOT_FOUND:
+                // ... 404 Not Found
+                
+                throw new PageNotFoundException();
+                
+                break;
+            case Dispatcher::METHOD_NOT_ALLOWED:
+                // ... 405 Method Not Allowed
+               
+                $allowedMethods = $routeInfo[1];
+                throw new HTTPException('Method Not Allowed ['.implode(', ', $allowedMethods).' accepted]', 405);
+               
+                break;
+            case Dispatcher::FOUND:
+                $handler = $routeInfo[1];
+                $vars = $routeInfo[2];
+                
+                $actions = $this->controllerActions($handler, $vars);
+                
+                break;
         }
-	            
-        $method = isset($actions['method']) && method_exists($controller, $actions['method']) ? $actions['method'] : 'doDefault';
-        return $controller->$method($request, new Response());
-	}
-	
-	/**
-	 * 
-	 * @param Request $request
-	 * @return multitype:array |NULL
-	 */
-	private function parseURL(Request $request) {
-	    $routeDefinitionCallback = function (RouteCollector $r) {
-	        foreach ($this->routes as $route) {
-	            $r->addRoute($route['methods'], $route['pattern'], $route['route']);
-	        }
-	    };
-	    
-	    $dispatcher = \FastRoute\simpleDispatcher($routeDefinitionCallback);
-	    
-	    $routeInfo = $dispatcher->dispatch($request->getMethod(), $request->getContextPath());
-	    
-	    switch ($routeInfo[0]) {
-	        case Dispatcher::NOT_FOUND:
-	            // ... 404 Not Found
-	            return null;
-	        case Dispatcher::METHOD_NOT_ALLOWED:
-	            $allowedMethods = $routeInfo[1];
-	            // ... 405 Method Not Allowed
-	            return null;
-	        case Dispatcher::FOUND:
-	            $handler = $routeInfo[1];
-	            $vars = $routeInfo[2];
-	            
-	            return $this->controllerActions($handler, $vars);
-	    }
-		
-		return null;
-	}
+         
+        return $this->execute($actions, $request, new Response());
+    }
 	
 	/**
 	 * 
