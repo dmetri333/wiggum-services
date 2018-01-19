@@ -107,7 +107,7 @@ class Router extends \wiggum\foundation\Router {
                 // ... 405 Method Not Allowed
                
                 $allowedMethods = $routeInfo[1];
-                throw new InternalErrorException('Method Not Allowed ['.implode(', ', $allowedMethods).' accepted]', 405);
+                throw new InternalErrorException('Method Not Allowed ['.implode(', ', $allowedMethods).' accepted], Ref: '.$request->getContextPath(), 405);
                
                 break;
             case Dispatcher::FOUND:
