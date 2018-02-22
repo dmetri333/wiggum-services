@@ -286,12 +286,12 @@ class Router extends \wiggum\foundation\Router {
 	        
 	        
 	    } else if (is_array($handler)) {
-	        if (isset($handler['classPath'])) {
-	            $actions['classPath'] = $handler['classPath'];
-	        }
+	        $routeSegments = explode('@', $handler['classPath']);
 	        
-	        if (isset($handler['method'])) {
-	            $actions['method'] = $handler['method'];
+	        $actions['classPath'] = $routeSegments[0];
+	         
+	        if (isset($routeSegments[1]) && $routeSegments[1] != '') {
+	            $actions['method'] = $routeSegments[1];
 	        }
 	        
 	        if (!empty($parameters)) {
