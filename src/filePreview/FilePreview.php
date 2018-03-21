@@ -315,15 +315,15 @@ class FilePreview {
 				$optimalWidth = $width;
 				$optimalHeight = $height;
 				break;
-			case 'portrait':
-				$optimalWidth = $this->getSizeByFixedHeight($height, $originalWidth, $originalHeight);
-				$optimalHeight = $height;
+			case 'heightBound':
+				$optimalHeight = $originalHeight < $height ? $originalHeight : $height;
+				$optimalWidth = $this->getSizeByFixedHeight($optimalHeight, $originalWidth, $originalHeight);
 				break;
-			case 'landscape':
-				$optimalWidth = $width;
-				$optimalHeight = $this->getSizeByFixedWidth($width, $originalWidth, $originalHeight);
+			case 'widthBound':
+				$optimalWidth = $originalWidth < $width ? $originalWidth : $width;
+				$optimalHeight = $this->getSizeByFixedWidth($optimalWidth, $originalWidth, $originalHeight);
 				break;
-			case 'auto':
+			case 'auto': // bounding box
 				$optionArray = $this->getSizeByAuto($width, $height, $originalWidth, $originalHeight);
 				$optimalWidth = $optionArray['optimalWidth'];
 				$optimalHeight = $optionArray['optimalHeight'];
@@ -331,19 +331,22 @@ class FilePreview {
 			default:
 				throw new \RuntimeException('Resize option "' . $option . '" not defined');
 		}
-		 
+		
 		return array('width' => (int) $optimalWidth, 'height' => (int) $optimalHeight);
 	}
-
+	
 	/**
 	 *
 	 * @param integer $height
 	 * @return number
 	 */
 	private function getSizeByFixedHeight($height, $originalWidth, $originalHeight) {
-		$ratio = $originalWidth / $originalHeight;
-		$width = $height * $ratio;
-		return $width;
+		if ($height == $originalHeight) {
+			return $originalWidth;
+		} else {
+			$ratio = $originalWidth / $originalHeight;
+			return $height * $ratio;
+		}
 	}
 
 	/**
@@ -352,9 +355,12 @@ class FilePreview {
 	 * @return number
 	 */
 	private function getSizeByFixedWidth($width, $originalWidth, $originalHeight) {
-		$ratio = $originalHeight / $originalWidth;
-		$height = $width * $ratio;
-		return $height;
+		if ($width == $originalWidth) {
+			return $originalHeight;
+		} else {
+			$ratio = $originalHeight / $originalWidth;
+			return $width * $ratio;
+		}
 	}
 	/**
 	 *
@@ -365,30 +371,30 @@ class FilePreview {
 	 * @return integer[]
 	 */
 	private function getSizeByAuto($width, $height, $originalWidth, $originalHeight) {
-		 
+		
 		if ($originalHeight < $originalWidth) {
 			//Image to be resized is wider (landscape)
-			$optimalWidth = $width;
-			$optimalHeight = $this->getSizeByFixedWidth($width, $originalWidth, $originalHeight);
+			$optimalWidth = $originalWidth < $width ? $originalWidth : $width;
+			$optimalHeight = $this->getSizeByFixedWidth($optimalWidth, $originalWidth, $originalHeight);
 		} elseif ($originalHeight > $originalWidth) {
 			//Image to be resized is taller (portrait)
-			$optimalWidth = $this->getSizeByFixedHeight($height, $originalWidth, $originalHeight);
-			$optimalHeight = $height;
+			$optimalHeight = $originalHeight < $height ? $originalHeight : $height;
+			$optimalWidth = $this->getSizeByFixedHeight($optimalHeight, $originalWidth, $originalHeight);
 		} else {
 			//Image to be resizerd is a square
 			if ($height < $width) {
-				$optimalWidth = $width;
-				$optimalHeight = $this->getSizeByFixedWidth($width, $originalWidth, $originalHeight);
+				$optimalWidth = $originalWidth < $width ? $originalWidth : $width;
+				$optimalHeight = $this->getSizeByFixedWidth($optimalWidth, $originalWidth, $originalHeight);
 			} else if ($height > $width) {
-				$optimalWidth = $this->getSizeByFixedHeight($height, $originalWidth, $originalHeight);
-				$optimalHeight = $height;
+				$optimalHeight = $originalHeight < $height ? $originalHeight : $height;
+				$optimalWidth = $this->getSizeByFixedHeight($optimalHeight, $originalWidth, $originalHeight);
 			} else {
 				//Sqaure being resized to a square
-				$optimalWidth = $width;
-				$optimalHeight = $height;
+				$optimalWidth = $originalWidth < $width ? $originalWidth : $width;
+				$optimalHeight = $originalHeight < $height ? $originalHeight : $height;
 			}
 		}
-		 
+		
 		return array('optimalWidth' => $optimalWidth, 'optimalHeight' => $optimalHeight);
 	}
 
