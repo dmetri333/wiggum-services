@@ -4,6 +4,7 @@ namespace wiggum\services\filePreview;
 use \Exception;
 use \Imagick;
 use \FFmpegMovie;
+use wiggum\services\filePreview\lib\VideoGif;
 
 class FilePreview {
 
@@ -16,7 +17,8 @@ class FilePreview {
 	public function __construct(array $config = []) {
 
 		$defaultConfig = [
-				'ffmpegBinaryPath' => '/usr/local/bin/ffmpeg'
+				'ffmpegBinaryPath' => '/usr/local/bin/ffmpeg',
+				'ffprobeBinaryPath' => '/usr/local/bin/ffprobe'
 		];
 
 		$this->config = array_merge($defaultConfig, $config);
@@ -78,13 +80,18 @@ class FilePreview {
 				$options['extension'] = 'jpg';
 
 					
-					
 	 		$fileOutput = $options['path'].$options['name'].'.'.$options['extension'];
 
 	 		$result = false;
 	 		if ($fileType == 'video') {
+
+	 			if ($options['animated']) {
+	 				$this->processVideoAnimation($fileInput, $fileOutput, $options['width'], $options['height']);
+		 			
+	 			} else {
+	 				$this->processVideoFrame($fileInput, $fileOutput, $options['width'], $options['height']);
 	 				
-	 			$this->processVideo($fileInput, $fileOutput, $options['width'], $options['height']);
+	 			}
 	 				
 	 		} else if ($fileType == 'image') {
 	 				
@@ -117,7 +124,7 @@ class FilePreview {
 	 * @param unknown $height
 	 * @throws \Exception
 	 */
-	private function processVideo($fileInput, $fileOutput, $width, $height) {
+	private function processVideoFrame($fileInput, $fileOutput, $width, $height) {
 		// ffmpeg
 		 
 		$movie = new FFmpegMovie($fileInput, null, $this->config['ffmpegBinaryPath'] );
@@ -134,6 +141,37 @@ class FilePreview {
 			throw new \Exception('Could not generate preview');
 		}
 
+	}
+	
+	/**
+	 * 
+	 * @param string $fileInput
+	 * @param string $fileOutput
+	 * @param int $width
+	 * @param int $height
+	 */
+	private function processVideoAnimation($fileInput, $fileOutput, $width, $height) {
+		$movie = new FFmpegMovie($fileInput, null, $this->config['ffmpegBinaryPath'] );
+		$frameRate = (int) $movie->getFrameRate();
+		$duration = $movie->getDuration();
+		$options = [
+				'binaries' => [
+						'ffmpeg.binaries' => $this->config['ffmpegBinaryPath'], 
+						'ffprobe.binaries' => $this->config['ffprobeBinaryPath']
+				]
+		];
+		$videoStart = 3;
+		$gifLength = 3;
+		if ($duration < ($videoStart + $gifLength)) {
+			if ($duration < $gifLength) {
+				$videoStart = 0;
+				$gifLength = $duration;
+			} else {
+				$videoStart = 0;
+			}
+		}
+		$videoGif = new VideoGif('/content/tmp', $options);
+		$videoGif->create($fileInput, $fileOutput, $frameRate * $gifLength, 100 / $frameRate, $width, $height, $videoStart, $videoStart + $gifLength);
 	}
 
 	/**
