@@ -4,6 +4,7 @@ namespace wiggum\services\filePreview;
 use \Exception;
 use \Imagick;
 use \FFmpegMovie;
+use wiggum\services\filePreview\lib\VideoGif;
 
 class FilePreview {
 
@@ -16,7 +17,8 @@ class FilePreview {
 	public function __construct(array $config = []) {
 
 		$defaultConfig = [
-				'ffmpegBinaryPath' => '/usr/local/bin/ffmpeg'
+				'ffmpegBinaryPath' => '/usr/local/bin/ffmpeg',
+				'ffprobeBinaryPath' => '/usr/local/bin/ffprobe'
 		];
 
 		$this->config = array_merge($defaultConfig, $config);
@@ -78,13 +80,18 @@ class FilePreview {
 				$options['extension'] = 'jpg';
 
 					
-					
 	 		$fileOutput = $options['path'].$options['name'].'.'.$options['extension'];
 
 	 		$result = false;
 	 		if ($fileType == 'video') {
+
+	 			if ($options['animated']) {
+	 				$this->processVideoAnimation($fileInput, $fileOutput, $options['width'], $options['height']);
+		 			
+	 			} else {
+	 				$this->processVideoFrame($fileInput, $fileOutput, $options['width'], $options['height']);
 	 				
-	 			$this->processVideo($fileInput, $fileOutput, $options['width'], $options['height']);
+	 			}
 	 				
 	 		} else if ($fileType == 'image') {
 	 				
@@ -117,7 +124,7 @@ class FilePreview {
 	 * @param unknown $height
 	 * @throws \Exception
 	 */
-	private function processVideo($fileInput, $fileOutput, $width, $height) {
+	private function processVideoFrame($fileInput, $fileOutput, $width, $height) {
 		// ffmpeg
 		 
 		$movie = new FFmpegMovie($fileInput, null, $this->config['ffmpegBinaryPath'] );
@@ -134,6 +141,37 @@ class FilePreview {
 			throw new \Exception('Could not generate preview');
 		}
 
+	}
+	
+	/**
+	 * 
+	 * @param string $fileInput
+	 * @param string $fileOutput
+	 * @param int $width
+	 * @param int $height
+	 */
+	private function processVideoAnimation($fileInput, $fileOutput, $width, $height) {
+		$movie = new FFmpegMovie($fileInput, null, $this->config['ffmpegBinaryPath'] );
+		$frameRate = (int) $movie->getFrameRate();
+		$duration = $movie->getDuration();
+		$options = [
+				'binaries' => [
+						'ffmpeg.binaries' => $this->config['ffmpegBinaryPath'], 
+						'ffprobe.binaries' => $this->config['ffprobeBinaryPath']
+				]
+		];
+		$videoStart = 3;
+		$gifLength = 3;
+		if ($duration < ($videoStart + $gifLength)) {
+			if ($duration < $gifLength) {
+				$videoStart = 0;
+				$gifLength = $duration;
+			} else {
+				$videoStart = 0;
+			}
+		}
+		$videoGif = new VideoGif('/content/tmp', $options);
+		$videoGif->create($fileInput, $fileOutput, $frameRate * $gifLength, 100 / $frameRate, $width, $height, $videoStart, $videoStart + $gifLength);
 	}
 
 	/**
@@ -315,15 +353,15 @@ class FilePreview {
 				$optimalWidth = $width;
 				$optimalHeight = $height;
 				break;
-			case 'portrait':
-				$optimalWidth = $this->getSizeByFixedHeight($height, $originalWidth, $originalHeight);
-				$optimalHeight = $height;
+			case 'heightBound':
+				$optimalHeight = $originalHeight < $height ? $originalHeight : $height;
+				$optimalWidth = $this->getSizeByFixedHeight($optimalHeight, $originalWidth, $originalHeight);
 				break;
-			case 'landscape':
-				$optimalWidth = $width;
-				$optimalHeight = $this->getSizeByFixedWidth($width, $originalWidth, $originalHeight);
+			case 'widthBound':
+				$optimalWidth = $originalWidth < $width ? $originalWidth : $width;
+				$optimalHeight = $this->getSizeByFixedWidth($optimalWidth, $originalWidth, $originalHeight);
 				break;
-			case 'auto':
+			case 'auto': // bounding box
 				$optionArray = $this->getSizeByAuto($width, $height, $originalWidth, $originalHeight);
 				$optimalWidth = $optionArray['optimalWidth'];
 				$optimalHeight = $optionArray['optimalHeight'];
@@ -331,19 +369,22 @@ class FilePreview {
 			default:
 				throw new \RuntimeException('Resize option "' . $option . '" not defined');
 		}
-		 
+		
 		return array('width' => (int) $optimalWidth, 'height' => (int) $optimalHeight);
 	}
-
+	
 	/**
 	 *
 	 * @param integer $height
 	 * @return number
 	 */
 	private function getSizeByFixedHeight($height, $originalWidth, $originalHeight) {
-		$ratio = $originalWidth / $originalHeight;
-		$width = $height * $ratio;
-		return $width;
+		if ($height == $originalHeight) {
+			return $originalWidth;
+		} else {
+			$ratio = $originalWidth / $originalHeight;
+			return $height * $ratio;
+		}
 	}
 
 	/**
@@ -352,9 +393,12 @@ class FilePreview {
 	 * @return number
 	 */
 	private function getSizeByFixedWidth($width, $originalWidth, $originalHeight) {
-		$ratio = $originalHeight / $originalWidth;
-		$height = $width * $ratio;
-		return $height;
+		if ($width == $originalWidth) {
+			return $originalHeight;
+		} else {
+			$ratio = $originalHeight / $originalWidth;
+			return $width * $ratio;
+		}
 	}
 	/**
 	 *
@@ -365,30 +409,30 @@ class FilePreview {
 	 * @return integer[]
 	 */
 	private function getSizeByAuto($width, $height, $originalWidth, $originalHeight) {
-		 
+		
 		if ($originalHeight < $originalWidth) {
 			//Image to be resized is wider (landscape)
-			$optimalWidth = $width;
-			$optimalHeight = $this->getSizeByFixedWidth($width, $originalWidth, $originalHeight);
+			$optimalWidth = $originalWidth < $width ? $originalWidth : $width;
+			$optimalHeight = $this->getSizeByFixedWidth($optimalWidth, $originalWidth, $originalHeight);
 		} elseif ($originalHeight > $originalWidth) {
 			//Image to be resized is taller (portrait)
-			$optimalWidth = $this->getSizeByFixedHeight($height, $originalWidth, $originalHeight);
-			$optimalHeight = $height;
+			$optimalHeight = $originalHeight < $height ? $originalHeight : $height;
+			$optimalWidth = $this->getSizeByFixedHeight($optimalHeight, $originalWidth, $originalHeight);
 		} else {
 			//Image to be resizerd is a square
 			if ($height < $width) {
-				$optimalWidth = $width;
-				$optimalHeight = $this->getSizeByFixedWidth($width, $originalWidth, $originalHeight);
+				$optimalWidth = $originalWidth < $width ? $originalWidth : $width;
+				$optimalHeight = $this->getSizeByFixedWidth($optimalWidth, $originalWidth, $originalHeight);
 			} else if ($height > $width) {
-				$optimalWidth = $this->getSizeByFixedHeight($height, $originalWidth, $originalHeight);
-				$optimalHeight = $height;
+				$optimalHeight = $originalHeight < $height ? $originalHeight : $height;
+				$optimalWidth = $this->getSizeByFixedHeight($optimalHeight, $originalWidth, $originalHeight);
 			} else {
 				//Sqaure being resized to a square
-				$optimalWidth = $width;
-				$optimalHeight = $height;
+				$optimalWidth = $originalWidth < $width ? $originalWidth : $width;
+				$optimalHeight = $originalHeight < $height ? $originalHeight : $height;
 			}
 		}
-		 
+		
 		return array('optimalWidth' => $optimalWidth, 'optimalHeight' => $optimalHeight);
 	}
 
