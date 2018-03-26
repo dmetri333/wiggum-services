@@ -152,7 +152,7 @@ class FilePreview {
 	 */
 	private function processVideoAnimation($fileInput, $fileOutput, $width, $height) {
 		$movie = new FFmpegMovie($fileInput, null, $this->config['ffmpegBinaryPath'] );
-		$frameRate = (int) $movie->getFrameRate();
+		$frameRate = (int) ($movie->getFrameRate() / 2);
 		$duration = $movie->getDuration();
 		$options = [
 				'binaries' => [
@@ -171,7 +171,7 @@ class FilePreview {
 			}
 		}
 		$videoGif = new VideoGif('/content/tmp', $options);
-		$videoGif->create($fileInput, $fileOutput, $frameRate * $gifLength, 100 / $frameRate, $width, $height, $videoStart, $videoStart + $gifLength);
+		$videoGif->create($fileInput, $fileOutput, $frameRate * $gifLength, 200 / $frameRate, $width, $height, $videoStart, $videoStart + $gifLength);
 	}
 
 	/**
