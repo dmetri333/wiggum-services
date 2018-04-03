@@ -10,7 +10,7 @@ use \FastRoute\RouteCollector;
 
 class Router extends \wiggum\foundation\Router {
     
-    protected $routeInfo = null;
+    protected $dispatcher;
     protected $routes = [];
     protected $routeGroups = [];
     protected $routeCounter;
@@ -207,10 +207,9 @@ class Router extends \wiggum\foundation\Router {
 	/**
 	 *
 	 * {@inheritDoc}
-	 * @see \wiggum\foundation\Router::dispatch()
+	 * @see \wiggum\foundation\Router::initialize()
 	 */
-	public function dispatch(Request $request) {
-	    $actions = null;
+	public function initialize() {
 	    
 	    $routeDefinitionCallback = function (RouteCollector $r) {
 	        foreach ($this->routes as $route) {
@@ -218,9 +217,18 @@ class Router extends \wiggum\foundation\Router {
 	        }
 	    };
 	    
-	    $dispatcher = \FastRoute\simpleDispatcher($routeDefinitionCallback);
-	    
-	    $routeInfo = $dispatcher->dispatch($request->getMethod(), $request->getContextPath());
+	    $this->dispatcher = \FastRoute\simpleDispatcher($routeDefinitionCallback);
+	}
+	
+	
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \wiggum\foundation\Router::process()
+	 */
+	public function process(Request $request) {
+	   
+	    $routeInfo = $this->dispatcher->dispatch($request->getMethod(), $request->getContextPath());
 	    
 	    switch ($routeInfo[0]) {
 	        case Dispatcher::NOT_FOUND:
@@ -237,11 +245,12 @@ class Router extends \wiggum\foundation\Router {
 	            
 	            break;
 	        case Dispatcher::FOUND:
-	            //store route info
-	            $this->routeInfo = $routeInfo;
+	            
+	            $identifier = $routeInfo[1];
+	            $parameters = $routeInfo[2];
+	            $route = $this->routes[$identifier];
 	            
 	            // Attach additional route middleware to app
-	            $route = $this->routes[$routeInfo[1]];
 	            if (!empty($route->getMiddleware())) {
 	                $middlewares = $this->filterArray($this->registeredMiddleware, $route->getMiddleware());
 	                foreach ($middlewares as $middleware) {
@@ -249,7 +258,7 @@ class Router extends \wiggum\foundation\Router {
 	                }
 	            }
 	            
-	            return;
+	            return $this->parseRoute($route, $parameters);
 	            
 	            break;
 	    }
@@ -258,15 +267,13 @@ class Router extends \wiggum\foundation\Router {
 	}
 	
 	/**
-	 *
-	 * {@inheritDoc}
-	 * @see \wiggum\foundation\Router::process()
+	 * 
+	 * @param unknown $route
+	 * @param unknown $parameters
+	 * @return unknown[]|mixed[]
 	 */
-	public function process() {
-	    $identifier = $this->routeInfo[1];
-	    $parameters = $this->routeInfo[2];
+	private function parseRoute($route, $parameters) {
 	    
-	    $route = $this->routes[$identifier];
 	    $handler = $route->getCallable();
 	    
 	    $actions = [];
