@@ -234,8 +234,6 @@ class Router extends \wiggum\foundation\Router {
 	        case Dispatcher::NOT_FOUND:
 	            // ... 404 Not Found
 	            
-	            throw new PageNotFoundException();
-	            
 	            break;
 	        case Dispatcher::METHOD_NOT_ALLOWED:
 	            // ... 405 Method Not Allowed
@@ -249,15 +247,7 @@ class Router extends \wiggum\foundation\Router {
 	            $identifier = $routeInfo[1];
 	            $parameters = $routeInfo[2];
 	            $route = $this->routes[$identifier];
-	            
-	            // Attach additional route middleware to app
-	            if (!empty($route->getMiddleware())) {
-	                $middlewares = $this->filterArray($this->registeredMiddleware, $route->getMiddleware());
-	                foreach ($middlewares as $middleware) {
-	                    $this->app->addMiddleware($middleware);
-	                }
-	            }
-	            
+	           
 	            return $this->parseRoute($route, $parameters);
 	            
 	            break;
@@ -313,6 +303,14 @@ class Router extends \wiggum\foundation\Router {
 	        $actions = (array) call_user_func_array($handler, [$parameters]);
 	    }
 	    
+	    // Attach additional route middleware to app
+	    if (!empty($route->getMiddleware())) {
+	        $middlewares = $this->filterArray($this->registeredMiddleware, $route->getMiddleware());
+	        foreach ($middlewares as $middleware) {
+	            $this->app->addMiddleware($middleware);
+	        }
+	    }
+	    
 	    //run filters
 	    if (!empty($route->getFilters())) {
 	        $filters = $this->filterArray($this->registeredfilters, $route->getFilters());
@@ -324,13 +322,16 @@ class Router extends \wiggum\foundation\Router {
 	    return $actions;
 	}
 	
+	/* Helpers */
 	
-	
-	/* helpers */
-	
+	/**
+	 * 
+	 * @param unknown $array
+	 * @param unknown $allowed
+	 * @return array
+	 */
 	private function filterArray($array, $allowed) {
 	    return array_intersect_key($array, array_flip($allowed));
 	}
 	
 }
-?>
