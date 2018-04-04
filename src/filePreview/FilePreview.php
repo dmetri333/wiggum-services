@@ -171,7 +171,7 @@ class FilePreview {
 			}
 		}
 		$videoGif = new VideoGif('/content/tmp', $options);
-		$videoGif->create($fileInput, $fileOutput, $frameRate * $gifLength, 200 / $frameRate, $width, $height, $videoStart, $videoStart + $gifLength);
+		$videoGif->create($fileInput, $fileOutput, $frameRate * $gifLength, 100 / $frameRate, $width, $height, $videoStart, $videoStart + $gifLength);
 	}
 
 	/**
