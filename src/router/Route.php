@@ -9,6 +9,7 @@ class Route {
     protected $identifier;
     protected $middleware = [];
     protected $filters = [];
+    protected $parameters =[];
 
     public function __construct(array $methods, $pattern, $callable, $identifier = 0) {
         $this->methods  = $methods;
@@ -47,6 +48,14 @@ class Route {
     
     public function getFilters() {
         return $this->filters;
+    }
+    
+    public function setParameters(array $parameters) {
+        $this->parameters = $parameters;
+    }
+    
+    public function getParameters() {
+        return $this->parameters;
     }
     
 }

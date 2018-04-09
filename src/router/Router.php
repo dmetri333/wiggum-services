@@ -11,6 +11,7 @@ use \FastRoute\RouteCollector;
 class Router extends \wiggum\foundation\Router {
     
     protected $dispatcher;
+    protected $route;
     protected $routes = [];
     protected $routeGroups = [];
     protected $routeCounter;
@@ -165,7 +166,7 @@ class Router extends \wiggum\foundation\Router {
 	 * 
 	 * @return array[]|string[]
 	 */
-	protected function processGroups() {
+/*	protected function processGroups() {
 	    $filters = [];
 	    $middleware = [];
 	    $pattern = '';
@@ -179,6 +180,7 @@ class Router extends \wiggum\foundation\Router {
 	    }
 	    return ['pattern' => $pattern, 'filters' => $filters, 'middleware' => $middleware ];
 	}
+*/
 	
 	/**
 	 * 
@@ -205,34 +207,21 @@ class Router extends \wiggum\foundation\Router {
 	/* runners */
 	
 	/**
-	 *
-	 * {@inheritDoc}
-	 * @see \wiggum\foundation\Router::initialize()
-	 */
-	public function initialize() {
-	    
-	    $routeDefinitionCallback = function (RouteCollector $r) {
-	        foreach ($this->routes as $route) {
-	            $r->addRoute($route->getMethods(), $route->getPattern(), $route->getIdentifier());
-	        }
-	    };
-	    
-	    $this->dispatcher = \FastRoute\simpleDispatcher($routeDefinitionCallback);
-	}
-	
-	
-	/**
 	 * 
-	 * {@inheritDoc}
-	 * @see \wiggum\foundation\Router::process()
+	 * @param Request $request
+	 * @throws PageNotFoundException
+	 * @throws InternalErrorException
+	 * @return \wiggum\services\router\unknown[]|mixed[]
 	 */
-	public function process(Request $request) {
-	   
-	    $routeInfo = $this->dispatcher->dispatch($request->getMethod(), $request->getContextPath());
+	public function lookup(Request $request) {
+	    
+	    $routeInfo = $this->dispatch($request);
 	    
 	    switch ($routeInfo[0]) {
 	        case Dispatcher::NOT_FOUND:
 	            // ... 404 Not Found
+	            
+	            throw new PageNotFoundException();
 	            
 	            break;
 	        case Dispatcher::METHOD_NOT_ALLOWED:
@@ -246,9 +235,11 @@ class Router extends \wiggum\foundation\Router {
 	            
 	            $identifier = $routeInfo[1];
 	            $parameters = $routeInfo[2];
+	            
 	            $route = $this->routes[$identifier];
-	           
-	            return $this->parseRoute($route, $parameters);
+	            $route->setParameters($parameters);
+	            
+	            return $route;
 	            
 	            break;
 	    }
@@ -258,13 +249,49 @@ class Router extends \wiggum\foundation\Router {
 	
 	/**
 	 * 
+	 * @param Request $request
+	 * @return unknown
+	 */
+	public function dispatch(Request $request) {
+	    
+	    return $this->createDispatcher()->dispatch(
+	        $request->getMethod(),
+	        $request->getContextPath()
+	    );
+	    
+	}
+	
+	/**
+	 * 
+	 * @return unknown
+	 */
+	protected function createDispatcher() {
+	    
+	    if ($this->dispatcher) {
+	        return $this->dispatcher;
+	    }
+	    
+	    $routeDefinitionCallback = function (RouteCollector $r) {
+	        foreach ($this->routes as $route) {
+	            $r->addRoute($route->getMethods(), $route->getPattern(), $route->getIdentifier());
+	        }
+	    };
+	    
+	    $this->dispatcher = \FastRoute\simpleDispatcher($routeDefinitionCallback);
+
+	    return $this->dispatcher;
+	}
+	
+	/**
+	 * 
 	 * @param unknown $route
 	 * @param unknown $parameters
 	 * @return unknown[]|mixed[]
 	 */
-	private function parseRoute($route, $parameters) {
+	public function process($route) {
 	    
 	    $handler = $route->getCallable();
+	    $parameters = $route->getParameters();
 	    
 	    $actions = [];
 	    
@@ -303,14 +330,6 @@ class Router extends \wiggum\foundation\Router {
 	        $actions = (array) call_user_func_array($handler, [$parameters]);
 	    }
 	    
-	    // Attach additional route middleware to app
-	    if (!empty($route->getMiddleware())) {
-	        $middlewares = $this->filterArray($this->registeredMiddleware, $route->getMiddleware());
-	        foreach ($middlewares as $middleware) {
-	            $this->app->addMiddleware($middleware);
-	        }
-	    }
-	    
 	    //run filters
 	    if (!empty($route->getFilters())) {
 	        $filters = $this->filterArray($this->registeredfilters, $route->getFilters());
@@ -321,6 +340,18 @@ class Router extends \wiggum\foundation\Router {
 	    
 	    return $actions;
 	}
+	
+	public function preProcess($route) {
+	    // Attach additional route middleware to app
+	    if (!empty($route->getMiddleware())) {
+	        $middlewares = $this->filterArray($this->registeredMiddleware, $route->getMiddleware());
+	        foreach ($middlewares as $middleware) {
+	            $this->app->addMiddleware($middleware);
+	        }
+	    }
+	    return $route;
+	}
+
 	
 	/* Helpers */
 	
