@@ -5,20 +5,28 @@ use ArrayAccess;
 use RuntimeException;
 use wiggum\http\Request;
 use wiggum\http\Response;
+use app\services\csrf\exceptions\TokenMismatchException;
 
 /**
  * CSRF protection middleware and service
  */
 class CSRFGuard
 {
-
+    
+    /**
+     * The URIs that should be excluded from CSRF verification.
+     *
+     * @var array
+     */
+    protected $except = [];
+    
     /**
      * Key for CSRF parameter
      *
      * @var string
      */
     protected $key;
-
+    
     /**
      * CSRF storage
      *
@@ -28,36 +36,23 @@ class CSRFGuard
      * @var array|ArrayAccess
      */
     protected $storage;
-
+    
     /**
      * CSRF Strength
      *
      * @var int
      */
     protected $strength;
-
-    /**
-     * Callable to be executed if the CSRF validation fails
-     *
-     * Signature of callable is:
-     * function($request, $response, $next)
-     * and a $response must be returned.
-     *
-     * @var callable
-     */
-    protected $failureCallable;
-
-
+    
     /**
      * Create new CSRF guard
      *
      * @param string $key
      * @param null|array|ArrayAccess $storage
-     * @param null|callable $failureCallable
      * @param integer $strength
      * @throws RuntimeException if the session cannot be found
      */
-    public function __construct($key = 'csrf', &$storage = null, callable $failureCallable = null, $strength = 16)
+    public function __construct($key = '_token', &$storage = null, $strength = 16)
     {
         $this->key = trim($key);
         if ($strength < 16) {
@@ -65,42 +60,33 @@ class CSRFGuard
         }
         $this->strength = $strength;
         $this->storage = &$storage;
-        $this->setFailureCallable($failureCallable);
     }
-
+    
     /**
      * Invoke middleware
      *
      * @param Request $request
      * @param Response $response
      * @param callable $next
-     *            
+     *
      * @return Response
      */
     public function __invoke(Request $request, Response $response, callable $next)
     {
         $this->validateStorage();
         
-        // Validate POST, PUT, DELETE, PATCH requests
-        if (in_array($request->getMethod(), [
-            'POST',
-            'PUT',
-            'DELETE',
-            'PATCH'
-        ])) {
-            $token = $request->getParameter($this->key, false);
-            if (!$token || !$this->validateToken($token)) {
+        if ($this->isReading($request) ||
+            $this->inExceptArray($request) ||
+            $this->tokensMatch($request)) {
                 
-                $failureCallable = $this->getFailureCallable();
-                return $failureCallable($request, $response, $next);
+                return $next($request, $response);
             }
-        }
-        
-        return $next($request, $response);
+            
+            throw new TokenMismatchException();
     }
-
+    
     /**
-     * 
+     *
      * @return string
      */
     public function generateFormFields()
@@ -109,22 +95,20 @@ class CSRFGuard
         
         // Generate new CSRF token
         $storedToken = $this->geToken();
+        if (!$storedToken) {
+            $storedToken = $this->generateToken();
+        }
         
         return $storedToken ? '<input type="hidden" name="'.$this->key.'" value="'. $storedToken .'">' : '';
     }
     
     /**
-     * 
+     *
      * @return string|boolean
      */
-    private function geToken()
+    protected function geToken()
     {
-        $storedToken = isset($this->storage[$this->key]) ? $this->storage[$this->key] : false;
-        if (!$storedToken) {
-            $storedToken = $this->generateToken();
-        }
-        
-        return $storedToken;
+        return isset($this->storage[$this->key]) ? $this->storage[$this->key] : false;
     }
     
     /**
@@ -132,42 +116,20 @@ class CSRFGuard
      *
      * @return string
      */
-    private function generateToken()
+    protected function generateToken()
     {
         // Generate new CSRF token
         $token = bin2hex(random_bytes($this->strength));
         $this->storage[$this->key] = $token;
         return $token;
     }
-
+    
     /**
-     * Validate CSRF token from current request
-     * against token value stored in $_SESSION
      *
-     * @param string $token
-     *            
-     * @return bool
+     * @throws RuntimeException
+     * @return array|ArrayAccess
      */
-    private function validateToken($token)
-    {
-        
-        $storedToken = isset($this->storage[$this->key]) ? $this->storage[$this->key] : false;
-        
-        if (function_exists('hash_equals')) {
-            $result = ($storedToken !== false && hash_equals($storedToken, $token));
-        } else {
-            $result = ($storedToken !== false && $storedToken === $token);
-        }
-        
-        return $result;
-    }
-
-   /**
-    * 
-    * @throws RuntimeException
-    * @return array|ArrayAccess
-    */
-    private function validateStorage()
+    protected function validateStorage()
     {
         if (is_array($this->storage)) {
             return $this->storage;
@@ -189,35 +151,60 @@ class CSRFGuard
         
         return $this->storage;
     }
-
+    
     /**
-     * Getter for failureCallable
+     * Determine if the HTTP request uses a ‘read’ verb.
      *
-     * @return callable|\Closure
+     * @param  Request  $request
+     * @return boolean
      */
-    private function getFailureCallable()
+    protected function isReading(Request $request)
     {
-        if (is_null($this->failureCallable)) {
-            $this->failureCallable = function (Request $request, Response $response, $next) {
-                $response->withStatus(400, 'Failed CSRF check!');
-                $response->addHeader('Content-type', 'text/plain');
-                return $response;
-            };
+        return in_array($request->getMethod(), ['HEAD', 'GET', 'OPTIONS']);
+    }
+    
+    /**
+     *
+     * @param Request $request
+     * @return boolean
+     */
+    protected function inExceptArray(Request $request)
+    {
+        foreach ($this->except as $except) {
+            if ($except == $request->getRequestURI()) {
+                return true;
+            }
         }
-        
-        return $this->failureCallable;
+        return false;
     }
-
+    
     /**
-     * Setter for failureCallable
+     * Determine if the storage and input CSRF tokens match.
      *
-     * @param mixed $failureCallable
-     * @return $this
+     * @param  Request $request
+     * @return boolean
      */
-    private function setFailureCallable($failureCallable)
+    protected function tokensMatch(Request $request)
     {
-        $this->failureCallable = $failureCallable;
-        return $this;
+        $token = $this->getTokenFromRequest($request);
+        $storedToken = $this->geToken();
+        
+        return  is_string($storedToken) &&
+        is_string($token) &&
+        hash_equals($storedToken, $token);
     }
-
+    
+    /**
+     * Get the CSRF token from the request.
+     *
+     * @param  Request $request
+     * @return string
+     */
+    protected function getTokenFromRequest(Request $request)
+    {
+        $token = $request->getParameter($this->key) ?: $request->getHeader('X-CSRF-TOKEN');
+        
+        return $token;
+    }
+    
 }
