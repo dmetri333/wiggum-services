@@ -5,7 +5,7 @@ use ArrayAccess;
 use RuntimeException;
 use wiggum\http\Request;
 use wiggum\http\Response;
-use app\services\csrf\exceptions\TokenMismatchException;
+use wiggum\services\csrf\exceptions\TokenMismatchException;
 
 /**
  * CSRF protection middleware and service
@@ -52,7 +52,7 @@ class CSRFGuard
      * @param integer $strength
      * @throws RuntimeException if the session cannot be found
      */
-    public function __construct($key = '_token', &$storage = null, $strength = 16)
+    public function __construct($key = 'csrf_token', &$storage = null, $strength = 16)
     {
         $this->key = trim($key);
         if ($strength < 16) {
@@ -79,36 +79,47 @@ class CSRFGuard
             $this->inExceptArray($request) ||
             $this->tokensMatch($request)) {
                 
-                return $next($request, $response);
-            }
+            return $next($request, $response);
+        }
             
-            throw new TokenMismatchException();
+        throw new TokenMismatchException();
     }
     
     /**
      *
      * @return string
      */
-    public function generateFormFields()
+    public function generateFormField()
     {
-        $this->validateStorage();
-        
-        // Generate new CSRF token
-        $storedToken = $this->geToken();
-        if (!$storedToken) {
-            $storedToken = $this->generateToken();
-        }
-        
-        return $storedToken ? '<input type="hidden" name="'.$this->key.'" value="'. $storedToken .'">' : '';
+        $token = $this->getToken();
+        return $token ? '<input type="hidden" name="'.$this->key.'" value="'. $token .'">' : '';
+    }
+    
+    /**
+     *
+     * @return string
+     */
+    public function generateMetaTag()
+    {
+        $token = $this->getToken();
+        return $token ? '<meta name="'.$this->key.'" content="'. $token .'">' : '';
     }
     
     /**
      *
      * @return string|boolean
      */
-    protected function geToken()
+    public function getToken()
     {
-        return isset($this->storage[$this->key]) ? $this->storage[$this->key] : false;
+        $this->validateStorage();
+        
+        // Generate new CSRF token
+        $storedToken = isset($this->storage[$this->key]) ? $this->storage[$this->key] : false;
+        if (!$storedToken) {
+            $storedToken = $this->generateToken();
+        }
+        
+        return $storedToken;
     }
     
     /**
@@ -187,11 +198,11 @@ class CSRFGuard
     protected function tokensMatch(Request $request)
     {
         $token = $this->getTokenFromRequest($request);
-        $storedToken = $this->geToken();
+        $storedToken = $this->getToken();
         
         return  is_string($storedToken) &&
-        is_string($token) &&
-        hash_equals($storedToken, $token);
+                is_string($token) &&
+                hash_equals($storedToken, $token);
     }
     
     /**
