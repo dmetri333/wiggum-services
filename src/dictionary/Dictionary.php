@@ -1,7 +1,7 @@
 <?php
 namespace wiggum\services\dictionary;
 
-class ErrorHandler {
+class Dictionary {
 	
 	protected $dictionary;
 	
