@@ -14,10 +14,13 @@ class DB {
 	 * @param array $config
 	 */
 	public function __construct($config) {
-		$port = isset($config['port']) ? $config['port'] : '3306';
-		$characterSet = isset($config['characterSet']) ? $config['characterSet'] : 'utf8';
-
-		$this->connect($config['protocol'], $config['username'], $config['password'], $config['url'], $config['name'], $port, $characterSet);
+	    
+	    if (!empty($config)) {
+	        $port = isset($config['port']) ? $config['port'] : '3306';
+	        $characterSet = isset($config['characterSet']) ? $config['characterSet'] : 'utf8';
+	        
+	        $this->connect($config['protocol'], $config['username'], $config['password'], $config['url'], $config['name'], $port, $characterSet);
+	    }
 	}
 	
 	/**
@@ -54,7 +57,7 @@ class DB {
 	public function connect($protocol, $user, $password, $url, $name, $port = 3306, $characterSet = 'utf8') {
 		$pdo = null;
 		try {
-			$options = array(PDO::ATTR_PERSISTENT => true);
+			$options = [PDO::ATTR_PERSISTENT => true];
 			$pdo = new PDO("{$protocol}:host={$url};port={$port};dbname={$name}", $user, $password, $options);
 			$pdo->exec('SET NAMES '.$characterSet);
 		} catch (PDOException $e) {

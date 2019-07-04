@@ -3,9 +3,17 @@
 	"require" : {
 		"nikic/fast-route" : "^1.0"
 	},
-	"autoload" : {
-		"psr-4" : {
-			"wiggum\\services\\" : "src/"
-		}
-	}
+	"require-dev": {
+		"phpunit/phpunit": "^8"
+	},
+    "autoload" : {
+        "psr-4" : {
+            "wiggum\\services\\" : "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "wiggum\\test\\": "tests/"
+        }
+    }
 }

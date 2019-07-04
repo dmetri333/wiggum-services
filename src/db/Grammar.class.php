@@ -22,7 +22,7 @@ class Grammar {
 	 * @return string
 	 */
 	public function compileSelect(Builder $query) {
-		if (is_null($query->columns)) $query->columns = array('*');
+		if (is_null($query->columns)) $query->columns = ['*'];
 		
 		return trim(implode(' ', $this->compileComponents($query)));
 	}
@@ -98,7 +98,7 @@ class Grammar {
 	/**
 	 * Compile the "join" portions of the query.
 	 *
-	 * @param  \Illuminate\Database\Query\Builder  $query
+	 * @param  Builder  $query
 	 * @param  array  $joins
 	 * @return string
 	 */
@@ -242,7 +242,8 @@ class Grammar {
 	protected function whereIn(Builder $query, $where) {
 		$in = $where['not'] ? 'not in' : 'in';
 		
-		if (empty($where['values'])) return '0 = 1';
+		if (empty($where['values'])) 
+		    return $where['not'] ? '1 = 1' : '0 = 1';
 	
 		$values = $this->parameterize($where['values']);
 	
@@ -261,6 +262,74 @@ class Grammar {
 		
 		return $this->wrap($where['column']).' is '.$null;
 	}
+	
+	/**
+	 * Compile a "where date" clause.
+	 *
+	 * @param  Builder  $query
+	 * @param  array  $where
+	 * @return string
+	 */
+	protected function whereDate(Builder $query, $where) {
+	    return $this->dateBasedWhere('date', $query, $where);
+	}
+	
+	/**
+	 * Compile a "where time" clause.
+	 *
+	 * @param  Builder  $query
+	 * @param  array  $where
+	 * @return string
+	 */
+	protected function whereTime(Builder $query, $where) {
+	    return $this->dateBasedWhere('time', $query, $where);
+	}
+	
+	/**
+	 * Compile a "where day" clause.
+	 *
+	 * @param  Builder  $query
+	 * @param  array  $where
+	 * @return string
+	 */
+	protected function whereDay(Builder $query, $where) {
+	    return $this->dateBasedWhere('day', $query, $where);
+	}
+	
+	/**
+	 * Compile a "where month" clause.
+	 *
+	 * @param  Builder  $query
+	 * @param  array  $where
+	 * @return string
+	 */
+	protected function whereMonth(Builder $query, $where) {
+	    return $this->dateBasedWhere('month', $query, $where);
+	}
+	
+	/**
+	 * Compile a "where year" clause.
+	 *
+	 * @param  Builder  $query
+	 * @param  array  $where
+	 * @return string
+	 */
+	protected function whereYear(Builder $query, $where) {
+	    return $this->dateBasedWhere('year', $query, $where);
+	}
+	
+	/**
+	 * Compile a date based where clause.
+	 *
+	 * @param  string  $type
+	 * @param  Builder  $query
+	 * @param  array  $where
+	 * @return string
+	 */
+	protected function dateBasedWhere($type, Builder $query, $where) {
+	    return $type.'('.$this->wrap($where['column']).') '.$where['operator'].' ?';
+	}
+	
 	
 	/**
 	 * Compile the "group by" portions of the query.
@@ -443,26 +512,25 @@ class Grammar {
 		// If the value being wrapped has a column alias we will need to separate out
 		// the pieces so we can wrap each of the segments of the expression on it
 		// own, and then joins them both back together with the "as" connector.
-		if (strpos(strtolower($value), ' as ') !== false) {
-			$segments = explode(' ', $value);
-
-			return $this->wrap($segments[0]).' as '.$this->wrapValue($segments[2]);
+		if (stripos($value, ' as ') !== false) {
+		    return $this->wrapAliasedValue($value);
 		}
-	
-		$wrapped = array();
-	
-		$segments = explode('.', $value);
-	
-		// If the value is not an aliased table expression, we'll just wrap it like
-		// normal, so if there is more than one segment, we will wrap the first
-		// segments as if it was a table and the rest as just regular values.
-		foreach ($segments as $key => $segment) {
-			$wrapped[] = $this->wrapValue($segment);
+		
+		// If the given value is a JSON selector we will wrap it differently than a
+		// traditional value. We will need to split this path and wrap each part
+		// wrapped, etc. Otherwise, we will simply wrap the value as a string.
+		if ($this->isJsonSelector($value)) {
+		    return $this->wrapJsonSelector($value);
 		}
-	
-		return implode('.', $wrapped);
+		
+		return $this->wrapSegments(explode('.', $value));
 	}
 	
+	/**
+	 * 
+	 * @param string $value
+	 * @return string
+	 */
 	private function wrapValue($value) {
 		if ($value === '*') return $value;
 	
@@ -508,4 +576,86 @@ class Grammar {
 	private function removeLeadingBoolean($value) {
 		return preg_replace('/and |or /', '', $value, 1);
 	}
+	
+	/**
+	 * Wrap a value that has an alias.
+	 *
+	 * @param  string  $value
+	 * @param  bool  $prefixAlias
+	 * @return string
+	 */
+	protected function wrapAliasedValue($value)
+	{
+	    $segments = explode(' ', $value);
+	    
+	    return $this->wrap($segments[0]).' as '.$this->wrapValue($segments[2]);
+	}
+	
+	/**
+	 * Wrap the given value segments.
+	 *
+	 * @param  array  $segments
+	 * @return string
+	 */
+	protected function wrapSegments($segments)
+	{
+	    $wrapped = [];
+	    
+	    // If the value is not an aliased table expression, we'll just wrap it like
+	    // normal, so if there is more than one segment, we will wrap the first
+	    // segments as if it was a table and the rest as just regular values.
+	    foreach ($segments as $key => $segment) {
+	        $wrapped[] = $this->wrapValue($segment);
+	    }
+	    
+	    return implode('.', $wrapped);
+	}
+	
+	/**
+	 * Wrap the given JSON selector.
+	 *
+	 * @param  string  $value
+	 * @return string
+	 */
+	protected function wrapJsonSelector($value)
+	{
+	    throw new RuntimeException('This database engine does not support JSON operations.');
+	}
+	
+	/**
+	 * Split the given JSON selector into the field and the optional path and wrap them separately.
+	 *
+	 * @param  string  $column
+	 * @return array
+	 */
+	protected function wrapJsonFieldAndPath($column)
+	{
+	    $parts = explode('->', $column, 2);
+	    $field = $this->wrap($parts[0]);
+	    $path = count($parts) > 1 ? ', '.$this->wrapJsonPath($parts[1]) : '';
+	    return [$field, $path];
+	}
+	
+	/**
+	 * Wrap the given JSON path.
+	 *
+	 * @param  string  $value
+	 * @return string
+	 */
+	protected function wrapJsonPath($value)
+	{
+	    return '\'$."'.str_replace('->', '"."', $value).'"\'';
+	}
+	
+	/**
+	 * Determine if the given string is a JSON selector.
+	 *
+	 * @param  string  $value
+	 * @return bool
+	 */
+	protected function isJsonSelector($value)
+	{
+	    return strpos($value, '->') !== false;
+	}
+	
 }
