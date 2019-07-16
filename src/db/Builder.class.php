@@ -48,14 +48,14 @@ class Builder {
 	protected $type;
 	protected $db;
 	protected $grammar;
-	protected $bindings = array (
+	protected $bindings = [
 			'select' => [],
 			'join' => [],
 			'where' => [],
 			'having' => [],
 			'order' => [],
 			'inserts' => []
-	);
+	];
 	
 	public $aggregate;
 	public $columns;
@@ -621,7 +621,7 @@ class Builder {
 	 * 
 	 * @param string $column
 	 * @param string $direction
-	 * @return \wiggum\db\Builder
+	 * @return \wiggum\services\db\Builder
 	 */
 	public function orderBy($column, $direction = 'asc') {
 		$direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
@@ -635,7 +635,7 @@ class Builder {
 	 * 
 	 * @param int $value
 	 * @param int $offset
-	 * @return \wiggum\db\Builder
+	 * @return \wiggum\services\db\Builder
 	 */
 	public function limit($value, $offset = null) {
 		if ($value > 0) 
@@ -650,7 +650,7 @@ class Builder {
 	/**
 	 * 
 	 * @param int $value
-	 * @return \wiggum\db\Builder
+	 * @return \wiggum\services\db\Builder
 	 */
 	public function offset($value) {
 		$this->offset = max(0, $value);
@@ -753,7 +753,7 @@ class Builder {
 	
 	/**
 	 * 
-	 * @param unknown $instance
+	 * @param object $instance
 	 */
 	public function fetchObject($instance) {
 		return $this->db->fetchObject($this->toSql(), $this->getBindings(), $instance);
@@ -761,7 +761,7 @@ class Builder {
 	
 	/**
 	 * 
-	 * @param unknown $instance
+	 * @param object $instance
 	 */
 	public function fetchObjects($instance) {
 		return $this->db->fetchObjects($this->toSql(), $this->getBindings(), $instance);
@@ -819,20 +819,40 @@ class Builder {
 		return (int) $this->aggregate('count', $columns);
 	}
 	
+	/**
+	 * 
+	 * @param string $column
+	 * @return integer
+	 */
 	public function sum($column) {
 		$result = $this->aggregate('sum', [$column]);
 	
 		return $result ?: 0;
 	}
 	
+	/**
+	 * 
+	 * @param string $column
+	 * @return integer
+	 */
 	public function min($column) {
 		return $this->aggregate('min', [$column]);
 	}
 	
+	/**
+	 * 
+	 * @param string $column
+	 * @return integer
+	 */
 	public function max($column) {
 		return $this->aggregate('max', [$column]);
 	}
 	
+	/**
+	 * 
+	 * @param string $column
+	 * @return integer
+	 */
 	public function avg($column) {
 		return $this->aggregate('avg', [$column]);
 	}
@@ -841,9 +861,9 @@ class Builder {
 	 * 
 	 * @param string $function
 	 * @param array $columns
-	 * @return unknown
+	 * @return integer
 	 */
-	public function aggregate($function, $columns = array('*')) {
+	public function aggregate($function, $columns = ['*']) {
 		$this->aggregate = compact('function', 'columns');
 	
 		// We will also back up the columns and select bindings since the 
@@ -902,9 +922,9 @@ class Builder {
 	/**
 	 * 
 	 * @param array $bindings
-	 * @param unknown $type
+	 * @param string $type
 	 * @throws InvalidArgumentException
-	 * @return \wiggum\db\Builder
+	 * @return \wiggum\services\db\Builder
 	 */
 	public function setBindings(array $bindings, $type) {
 		if (!array_key_exists($type, $this->bindings)) {
@@ -927,7 +947,7 @@ class Builder {
 	//TODO - remove once bindings are added flat
 	/**
 	 * 
-	 * @param unknown $array
+	 * @param array $array
 	 * @return multitype:unknown
 	 */
 	private function flattenArray($array) {

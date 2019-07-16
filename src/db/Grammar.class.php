@@ -370,7 +370,7 @@ class Grammar {
 	 * Compile the "offset" portions of the query.
 	 *
 	 * @param  Builder $query
-	 * @param  int  $offset
+	 * @param  int $offset
 	 * @return string
 	 */
 	protected function compileOffset(Builder $query, $offset) {
@@ -380,7 +380,7 @@ class Grammar {
 	/**
 	 *
 	 * @param Builder $query
-	 * @param unknown $value
+	 * @param string|boolean $value
 	 * @return string
 	 */
 	protected function compileLock(Builder $query, $value) {
@@ -619,7 +619,7 @@ class Grammar {
 	 */
 	protected function wrapJsonSelector($value)
 	{
-	    throw new RuntimeException('This database engine does not support JSON operations.');
+	    throw new \RuntimeException('This database engine does not support JSON operations.');
 	}
 	
 	/**
