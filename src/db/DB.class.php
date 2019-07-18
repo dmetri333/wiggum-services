@@ -3,6 +3,7 @@ namespace wiggum\services\db;
 
 use \PDO;
 use \PDOException;
+use \wiggum\services\db\grammers\MySqlGrammar;
 
 class DB {
 	
@@ -37,7 +38,7 @@ class DB {
 	 * @return \wiggum\services\db\Builder
 	 */
 	public function table($table) {
-		$query = new Builder($this, new Grammar());
+		$query = new Builder($this, new MySqlGrammar());
 		
 		return $query->from($table);
 	}
@@ -282,4 +283,3 @@ class DB {
 	
 	
 }
-?>
