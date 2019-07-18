@@ -21,7 +21,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile a select query into SQL.
 	 * 
-	 * @param Builder $query
+	 * @param \wiggum\services\db\Builder $query
 	 * @return string
 	 */
 	public function compileSelect(Builder $query) {
@@ -33,7 +33,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile the components necessary for a select clause.
 	 *
-	 * @param Builder $query
+	 * @param \wiggum\services\db\Builder $query
 	 * @return array
 	 */
 	protected function compileComponents(Builder $query) {
@@ -52,7 +52,7 @@ class MySqlGrammar extends Grammar {
 	
 	/**
 	 * 
-	 * @param Builder $query
+	 * @param \wiggum\services\db\Builder $query
 	 * @param array $aggregate
 	 * @return string
 	 */
@@ -70,7 +70,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile the "select *" portion of the query.
 	 *
-	 * @param Builder $query       	
+	 * @param \wiggum\services\db\Builder $query       	
 	 * @param array $columns        	
 	 * @return string
 	 */
@@ -90,7 +90,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile the "from" portion of the query.
 	 *
-	 * @param Builder $query        	
+	 * @param \wiggum\services\db\Builder $query        	
 	 * @param string $tables
 	 * @return string
 	 */
@@ -101,14 +101,14 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile the "join" portions of the query.
 	 *
-	 * @param  Builder  $query
+	 * @param  \wiggum\services\db\Builder  $query
 	 * @param  array  $joins
 	 * @return string
 	 */
 	protected function compileJoins(Builder $query, $joins) {
-		$sql = array();
+		$sql = [];
 	
-		$query->setBindings(array(), 'join');
+		$query->setBindings([], 'join');
 
 		foreach ($joins as $join) {
 			$table = $this->wrap($join->table);
@@ -116,7 +116,7 @@ class MySqlGrammar extends Grammar {
 			// First we need to build all of the "on" clauses for the join. There may be many
 			// of these clauses so we will need to iterate through each one and build them
 			// separately, then we'll join them up into a single string when we're done.
-			$clauses = array();
+			$clauses = [];
 	
 			foreach ($join->clauses as $clause) {
 				$clauses[] = $this->compileJoinConstraint($clause);
@@ -170,7 +170,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile the "where" portions of the query.
 	 *
-	 * @param  Builder $query
+	 * @param  \wiggum\services\db\Builder $query
 	 * @return string
 	 */
 	protected function compileWheres(Builder $query) {
@@ -203,7 +203,7 @@ class MySqlGrammar extends Grammar {
 	
 	/**
 	 * 
-	 * @param Builder $query
+	 * @param \wiggum\services\db\Builder $query
 	 * @param array $where
 	 * @return string
 	 */
@@ -216,7 +216,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile a basic where clause.
 	 *
-	 * @param Builder $query
+	 * @param \wiggum\services\db\Builder $query
 	 * @param  array  $where
 	 * @return string
 	 */
@@ -227,7 +227,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile a "between" where clause.
 	 *
-	 * @param  Builder $query
+	 * @param  \wiggum\services\db\Builder $query
 	 * @param  array  $where
 	 * @return string
 	 */
@@ -240,7 +240,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile a "where in" clause.
 	 *
-	 * @param  Builder $query
+	 * @param  \wiggum\services\db\Builder $query
 	 * @param  array  $where
 	 * @return string
 	 */
@@ -258,7 +258,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile a "where null" clause.
 	 *
-	 * @param  Builder $query
+	 * @param  \wiggum\services\db\Builder $query
 	 * @param  array  $where
 	 * @return string
 	 */
@@ -271,7 +271,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile a "where date" clause.
 	 *
-	 * @param  Builder  $query
+	 * @param  \wiggum\services\db\Builder  $query
 	 * @param  array  $where
 	 * @return string
 	 */
@@ -282,7 +282,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile a "where time" clause.
 	 *
-	 * @param  Builder  $query
+	 * @param  \wiggum\services\db\Builder  $query
 	 * @param  array  $where
 	 * @return string
 	 */
@@ -293,7 +293,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile a "where day" clause.
 	 *
-	 * @param  Builder  $query
+	 * @param  \wiggum\services\db\Builder  $query
 	 * @param  array  $where
 	 * @return string
 	 */
@@ -304,7 +304,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile a "where month" clause.
 	 *
-	 * @param  Builder  $query
+	 * @param  \wiggum\services\db\Builder  $query
 	 * @param  array  $where
 	 * @return string
 	 */
@@ -315,7 +315,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile a "where year" clause.
 	 *
-	 * @param  Builder  $query
+	 * @param  \wiggum\services\db\Builder  $query
 	 * @param  array  $where
 	 * @return string
 	 */
@@ -327,7 +327,7 @@ class MySqlGrammar extends Grammar {
 	 * Compile a date based where clause.
 	 *
 	 * @param  string  $type
-	 * @param  Builder  $query
+	 * @param  \wiggum\services\db\Builder  $query
 	 * @param  array  $where
 	 * @return string
 	 */
@@ -339,7 +339,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile the "group by" portions of the query.
 	 *
-	 * @param  Builder $query
+	 * @param  \wiggum\services\db\Builder $query
 	 * @param  array  $groups
 	 * @return string
 	 */
@@ -350,7 +350,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile the "order by" portions of the query.
 	 *
-	 * @param  Builder $query
+	 * @param  \wiggum\services\db\Builder $query
 	 * @param  array  $orders
 	 * @return string
 	 */
@@ -363,7 +363,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile the "limit" portions of the query.
 	 *
-	 * @param  Builder $query
+	 * @param  \wiggum\services\db\Builder $query
 	 * @param  int  $limit
 	 * @return string
 	 */
@@ -374,7 +374,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile the "offset" portions of the query.
 	 *
-	 * @param  Builder $query
+	 * @param  \wiggum\services\db\Builder $query
 	 * @param  int $offset
 	 * @return string
 	 */
@@ -384,7 +384,7 @@ class MySqlGrammar extends Grammar {
 	
 	/**
 	 *
-	 * @param Builder $query
+	 * @param \wiggum\services\db\Builder $query
 	 * @param string|boolean $value
 	 * @return string
 	 */
@@ -398,7 +398,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile an insert statement into SQL.
 	 *
-	 * @param  Builder $query
+	 * @param  \wiggum\services\db\Builder $query
 	 * @param  array  $values
 	 * @return string
 	 */
@@ -422,7 +422,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile an update statement into SQL.
 	 *
-	 * @param  Builder $query
+	 * @param  \wiggum\services\db\Builder $query
 	 * @param  array  $values
 	 * @return string
 	 */
@@ -468,7 +468,7 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile a delete statement into SQL.
 	 *
-	 * @param  Builder $query
+	 * @param  \wiggum\services\db\Builder $query
 	 * @return string
 	 */
 	public function compileDelete(Builder $query) {
