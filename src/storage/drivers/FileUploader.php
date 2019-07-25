@@ -118,7 +118,7 @@ class FileUploader extends StorageDriver {
 	public function upload($file) {
  	   
 	    if (!isset($file)) {
-	        $this->setError('upload_no_file_selected');
+	        $this->setError('upload.noFileSelected');
 	        return false;
 	    }
 	    
@@ -135,28 +135,28 @@ class FileUploader extends StorageDriver {
 	        switch ($error)
 	        {
 	            case UPLOAD_ERR_INI_SIZE:
-	                $this->setError('upload_file_exceeds_limit');
+	                $this->setError('upload.fileExceedsLimit');
 	                break;
 	            case UPLOAD_ERR_FORM_SIZE:
-	                $this->setError('upload_file_exceeds_form_limit');
+	                $this->setError('upload.fileExceedsFormLimit');
 	                break;
 	            case UPLOAD_ERR_PARTIAL:
-	                $this->setError('upload_file_partial');
+	                $this->setError('upload.filePartial');
 	                break;
 	            case UPLOAD_ERR_NO_FILE:
-	                $this->setError('upload_no_file_selected');
+	                $this->setError('upload.noFileSelected');
 	                break;
 	            case UPLOAD_ERR_NO_TMP_DIR:
-	                $this->setError('upload_no_temp_directory');
+	                $this->setError('upload.noTempDirectory');
 	                break;
 	            case UPLOAD_ERR_CANT_WRITE:
-	                $this->setError('upload_unable_to_write_file');
+	                $this->setError('upload.unableToWriteFile');
 	                break;
 	            case UPLOAD_ERR_EXTENSION:
-	                $this->setError('upload_stopped_by_extension');
+	                $this->setError('upload.stoppedExtension');
 	                break;
 	            default:
-	                $this->setError('upload_no_file_selected');
+	                $this->setError('upload.noFileSelected');
 	                break;
 	        }
 	        
@@ -173,7 +173,7 @@ class FileUploader extends StorageDriver {
  	    
 	    // Is the file type allowed to be uploaded?
 	    if (!$this->isAllowedFileType()) {
-	        $this->setError('upload_invalid_filetype');
+	        $this->setError('upload.invalidFiletype');
 	        return false;
 	    }
 	    
@@ -184,14 +184,14 @@ class FileUploader extends StorageDriver {
 	    
  	    // Is the file size within the allowed maximum?
  	    if (!$this->isAllowedFilesize()) {
- 	        $this->setError('upload_invalid_filesize');
+ 	        $this->setError('upload.invalidFilesize');
  	        return false;
  	    }
 	    
 	    // Are the image dimensions within the allowed size?
 	    // Note: This can fail if the server has an open_basedir restriction.
 	    if (!$this->isAllowedDimensions()) {
-	        $this->setError('upload_invalid_dimensions');
+	        $this->setError('upload.invalidDimensions');
 	        return false;
 	    }
 	    
@@ -209,6 +209,7 @@ class FileUploader extends StorageDriver {
 	     * If it returns false there was a problem.
 	     */
 	    if (false === ($this->fileName = $this->createFileName($this->fileName))) {
+	        $this->setError('upload.badFilename');
 	        return false;
 	    }
 	    
@@ -219,7 +220,7 @@ class FileUploader extends StorageDriver {
 	     * be disguised as images or other file types.
 	     */
 	    if ($this->xssClean && $this->doXssClean() === false) {
-	        $this->setError('upload_unable_to_write_file');
+	        $this->setError('upload.unableToWriteFile');
 	        return false;
 	    }
 	    
@@ -232,7 +233,7 @@ class FileUploader extends StorageDriver {
 	     */
 	    if (!@copy($this->fileTemp, $this->uploadPath.$this->fileName)) {
 	        if (!@move_uploaded_file($this->fileTemp, $this->uploadPath.$this->fileName)) {
-	            $this->setError('upload_destination_error');
+	            $this->setError('upload.destinationError');
 	            return false;
 	        }
 	    }
@@ -321,7 +322,6 @@ class FileUploader extends StorageDriver {
 	    }
 	    
 	    if ($newFileName === '') {
-	        $this->setError('upload_bad_filename');
 	        return false;
 	    }
 	    
@@ -352,12 +352,12 @@ class FileUploader extends StorageDriver {
 	    }
 	    
 	    if (!is_dir($this->uploadPath)) {
-	        $this->setError('upload_no_filepath');
+	        $this->setError('upload.noFilepath');
 	        return false;
 	    }
 	    
 	    if (!$this->isWritable($this->uploadPath)) {
-	        $this->setError('upload_not_writable');
+	        $this->setError('upload.notWritable');
 	        return false;
 	    }
 	    
