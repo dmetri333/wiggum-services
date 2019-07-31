@@ -30,6 +30,12 @@ class Uploader {
     public $xssClean = false;
     public $removeSpaces = true;
 	
+    /**
+     * 
+     * @param string $uploadPath
+     * @param boolean $createDir
+     * @return \wiggum\services\upload\Uploader
+     */
 	public function path($uploadPath, $createDir = false)
 	{
 	    $this->uploadPath = rtrim($uploadPath, '/').'/';
@@ -38,6 +44,11 @@ class Uploader {
 	    return $this;
 	}
 	
+	/**
+	 * 
+	 * @param array $allowedTypes
+	 * @return \wiggum\services\upload\Uploader
+	 */
 	public function allowedTypes(array $allowedTypes)
 	{
 	    $this->allowedTypes = $allowedTypes;
@@ -53,6 +64,11 @@ class Uploader {
 	}
 	*/
 	
+	/**
+	 * 
+	 * @param integer $maxSize
+	 * @return \wiggum\services\upload\Uploader
+	 */
 	public function maxSize($maxSize)
 	{
 	    $this->maxSize = $maxSize < 0 ? 0 : (int) $maxSize;
@@ -60,6 +76,11 @@ class Uploader {
 	    return $this;
 	}
 	
+	/**
+	 * 
+	 * @param integer $maxWidth
+	 * @return \wiggum\services\upload\Uploader
+	 */
 	public function maxWidth($maxWidth)
 	{
 	    $this->maxWidth = $maxWidth < 0 ? 0 : (int) $maxWidth;
@@ -67,6 +88,11 @@ class Uploader {
 	    return $this;
 	}
 	
+	/**
+	 * 
+	 * @param integer $maxHeight
+	 * @return \wiggum\services\upload\Uploader
+	 */
 	public function maxHeight($maxHeight)
 	{
 	    $this->maxHeight = $maxHeight < 0 ? 0 : (int) $maxHeight;
@@ -74,6 +100,11 @@ class Uploader {
 	    return $this;
 	}
 	
+	/**
+	 * 
+	 * @param integer $minWidth
+	 * @return \wiggum\services\upload\Uploader
+	 */
 	public function minWidth($minWidth)
 	{
 	    $this->minWidth = $minWidth < 0 ? 0 : (int) $minWidth;
@@ -81,6 +112,11 @@ class Uploader {
 	    return $this;
 	}
 	
+	/**
+	 * 
+	 * @param integer $minHeight
+	 * @return \wiggum\services\upload\Uploader
+	 */
 	public function minHeight($minHeight)
 	{
 	    $this->minHeight = $minHeight < 0 ? 0 : (int) $minHeight;
@@ -88,6 +124,11 @@ class Uploader {
 	    return $this;
 	}
 	
+	/**
+	 * 
+	 * @param integer $maxFilenameIncrement
+	 * @return \wiggum\services\upload\Uploader
+	 */
 	public function maxFilenameIncrement($maxFilenameIncrement)
 	{
 	    $this->maxFilenameIncrement = $maxFilenameIncrement;
@@ -95,6 +136,11 @@ class Uploader {
 	    return $this;
 	}
 
+	/**
+	 * 
+	 * @param boolean $xssClean
+	 * @return \wiggum\services\upload\Uploader
+	 */
 	public function xssClean($xssClean)
 	{
 	    $this->xssClean = $xssClean;
@@ -102,6 +148,11 @@ class Uploader {
 	    return $this;
 	}
 	
+	/**
+	 * 
+	 * @param boolean $encryptName
+	 * @return \wiggum\services\upload\Uploader
+	 */
 	public function encryptName($encryptName)
 	{
 	    $this->encryptName = $encryptName;
@@ -244,11 +295,8 @@ class Uploader {
  	/**
  	 * Finalized Data Array
  	 *
- 	 * Returns an associative array containing all of the information
- 	 * related to the upload, allowing the developer easy access in one array.
- 	 *
- 	 * @param	string	$index
- 	 * @return	mixed
+ 	 * @param string $index
+ 	 * @return object
  	 */
  	public function data($index = null)
  	{
@@ -279,10 +327,10 @@ class Uploader {
  	 * Prevents possible script execution from Apache's handling
  	 * of files' multiple extensions.
  	 *
- 	 * @link	https://httpd.apache.org/docs/1.3/mod/mod_mime.html#multipleext
+ 	 * @link https://httpd.apache.org/docs/1.3/mod/mod_mime.html#multipleext
  	 *
- 	 * @param	string	$filename
- 	 * @return	string
+ 	 * @param string $filename
+ 	 * @return string
  	 */
  	private function prepFileName($filename)
  	{
@@ -335,7 +383,7 @@ class Uploader {
 	 *
 	 * Verifies that it is a valid upload path with proper permissions.
 	 *
-	 * @return	bool
+	 * @return boolean
 	 */
 	private function validateUploadPath()
 	{
@@ -349,7 +397,7 @@ class Uploader {
 	    }
 	    
 	    if ($this->createDir) {
-	        $this->createFolder($this->uploadPath);
+	        FileHelper::createFolder($this->uploadPath);
 	    }
 	    
 	    if (!is_dir($this->uploadPath)) {
@@ -369,8 +417,8 @@ class Uploader {
 	/**
 	 * Verify that the filetype is allowed
 	 *
-	 * @param	bool	$ignore_mime
-	 * @return	bool
+	 * @param boolean $ignore_mime
+	 * @return boolean
 	 */
 	private function isAllowedFileType()
 	{
@@ -393,7 +441,7 @@ class Uploader {
 	/**
 	 * Verify that the file is within the allowed size
 	 *
-	 * @return	bool
+	 * @return boolean
 	 */
 	private function isAllowedFilesize()
 	{
@@ -403,7 +451,7 @@ class Uploader {
 	/**
 	 * Validate the image
 	 *
-	 * @return	bool
+	 * @return boolean
 	 */
 	private function isImage()
 	{
@@ -413,7 +461,7 @@ class Uploader {
 	/**
 	 * Verify that the image is within the allowed width/height
 	 *
-	 * @return	bool
+	 * @return boolean
 	 */
 	private function isAllowedDimensions()
 	{
@@ -441,26 +489,6 @@ class Uploader {
 	        }
 	    }
 	    
-	    return true;
-	}
-	
-	/**
-	 * Create a folder
-	 *
-	 * @param string $path - the directory to create
-	 * @param boolean $makeParents [default=true] - true to create parent directories
-	 * @return boolean
-	 */
-	private function createFolder($path, $recursive = true, $mode = 0755)
-	{
-	    if (file_exists($path)) {
-	        return true;
-	    } else {
-	        $result = mkdir($path, $mode, $recursive);
-	        if (!$result) {
-	            return false;
-	        }
-	    }
 	    return true;
 	}
 	
