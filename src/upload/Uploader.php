@@ -218,7 +218,7 @@ class Uploader {
  	    $this->fileSize       = $file['size'];
  	    $this->fileName       = $this->prepFileName($file['name']);
  	    $this->originalName   = $this->fileName;
- 	    $this->fileExt	      = FileHelper::getExtension($this->fileName);
+ 	    $this->fileExt	      = FileHelper::extension($this->fileName);
  	    $this->fileType       = FileHelper::mimeType($file['tmp_name'], $file['type']);
  	    
 	    // Is the file type allowed to be uploaded?
