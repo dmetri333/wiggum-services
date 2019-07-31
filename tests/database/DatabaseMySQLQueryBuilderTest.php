@@ -6,7 +6,7 @@ use wiggum\services\db\Builder;
 use wiggum\services\db\DB;
 use wiggum\services\db\grammers\MySqlGrammar;
 
-class DatabaseQueryBuilderTest extends TestCase
+class DatabaseMySQLQueryBuilderTest extends TestCase
 {
     protected function getBuilder()
     {
