@@ -1,7 +1,8 @@
 {
 	"name" : "wiggum/services",
 	"require" : {
-		"nikic/fast-route" : "^1.0"
+		"nikic/fast-route" : "^1.0",
+		"intervention/image" : "^2.0"
 	},
 	"require-dev": {
 		"phpunit/phpunit": "^8"
