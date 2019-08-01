@@ -597,7 +597,7 @@ class Uploader {
     }
     
     /**
-     *
+     * @param int $index
      * @return array
      */
     public function getError($index)
