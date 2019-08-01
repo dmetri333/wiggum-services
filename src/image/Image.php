@@ -9,7 +9,7 @@ class Image {
     
 	/**
 	 * 
-	 * @param string $driver
+	 * @param array $config
 	 */
     public function __construct(array $config = [])
 	{
@@ -19,13 +19,29 @@ class Image {
 	/**
 	 * 
 	 * @param mixed $source
-	 * @return Intervention\Image\ImageManager
+	 * 
+	 * @return \Intervention\Image\Image
 	 */
 	public function make($source)
 	{
 	    $manager = new ImageManager($this->config);
 	    
 	    return $manager->make($source);
+	}
+
+	/**
+	 * 
+	 * @param integer $width
+	 * @param integer $height
+	 * @param mixed $background
+	 * 
+	 * @return \Intervention\Image\Image
+	 */
+	public function canvas($width, $height, $background = null)
+	{
+	    $manager = new ImageManager($this->config);
+	    
+	    return $manager->canvas($width, $height, $background);
 	}
 	
 }
