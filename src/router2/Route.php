@@ -17,11 +17,11 @@ class Route implements \wiggum\http\interfaces\Route
      * 
      * @param array $methods
      * @param string $pattern
-     * @param callable $callable
+     * @param mixed $callable
      * @param array $groups
      * @param int $identifier
      */
-    public function __construct(array $methods, string $pattern, callable $callable, array $groups = [], int $identifier = 0)
+    public function __construct(array $methods, string $pattern, $callable, array $groups = [], int $identifier = 0)
     {
         $this->methods  = $methods;
         $this->pattern  = $pattern;
@@ -52,7 +52,7 @@ class Route implements \wiggum\http\interfaces\Route
      * 
      * @return callable
      */
-    public function getCallable(): callable
+    public function getCallable()
     {
         return $this->callable;
     }
