@@ -190,6 +190,15 @@ class CSRFGuard
     }
     
     /**
+     * 
+     * @param array $except
+     */
+    protected function setExcept(array $except)
+    {
+        $this->except = $except;
+    }
+    
+    /**
      * Determine if the storage and input CSRF tokens match.
      *
      * @param  Request $request
