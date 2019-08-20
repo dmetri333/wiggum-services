@@ -1,7 +1,7 @@
 <?php
 namespace wiggum\services\router2;
 
-class Route {
+class Route extends  wiggum\http\Route {
     
     protected $methods = [];
     protected $pattern;
@@ -9,9 +9,18 @@ class Route {
     protected $groups = [];
     protected $identifier;
     protected $middleware = [];
-    protected $parameters =[];
+    protected $filters = [];
+    protected $parameters = [];
 
-    public function __construct(array $methods, $pattern, $callable, $groups = [], $identifier = 0)
+    /**
+     * 
+     * @param array $methods
+     * @param string $pattern
+     * @param callable $callable
+     * @param array $groups
+     * @param int $identifier
+     */
+    public function __construct(array $methods, string $pattern, callable $callable, array $groups = [], int $identifier = 0)
     {
         $this->methods  = $methods;
         $this->pattern  = $pattern;
@@ -20,54 +29,124 @@ class Route {
         $this->identifier = 'route' . $identifier;
     }
     
-    public function getMethods()
+    /**
+     * 
+     * @return array
+     */
+    public function getMethods() : array
     {
         return $this->methods;
     }
     
-    public function getPattern()
+    /**
+     * 
+     * @return string
+     */
+    public function getPattern() : string
     {
         return $this->pattern;
     }
 
-    public function getCallable()
+    /**
+     * 
+     * @return callable
+     */
+    public function getCallable() : callable
     {
         return $this->callable;
     }
     
-    public function getIdentifier()
+    /**
+     * 
+     * @return string
+     */
+    public function getIdentifier() : string
     {
         return $this->identifier;
     }
     
-    public function setParameters(array $parameters)
+    /**
+     * 
+     * @param array $parameters
+     */
+    public function setParameters(array $parameters) : void
     {
         $this->parameters = $parameters;
     }
     
-    public function getParameters()
+    /**
+     * 
+     * @return array
+     */
+    public function getParameters() : array
     {
         return $this->parameters;
     }
- 
-    public function setMiddleware(array $middleware)
+
+    /**
+     * 
+     * @param array $middleware
+     */
+    public function setMiddleware(array $middleware) : void
     {
         $this->middleware = $middleware;
     }
     
-    public function getMiddleware()
+    /**
+     * 
+     * @return array
+     */
+    public function getMiddleware() : array
     {
         return $this->middleware;
     }
     
-    public function addMiddleware($middleware)
+    /**
+     * 
+     * @param callable $middleware
+     * @return Route
+     */
+    public function addMiddleware(callable $middleware) : Route
     {
         $this->middleware[] = $middleware;
         
         return $this;
     }
     
-    public function appendGroupMiddleware()
+    /**
+     * 
+     * @param array $filters
+     */
+    public function setFilters(array $filters) : void
+    {
+        $this->filters = $filters;
+    }
+    
+    /**
+     * 
+     * @return array
+     */
+    public function getFilters() : array
+    {
+        return $this->filter;
+    }
+    
+    /**
+     * 
+     * @param callable $filter
+     * @return Route
+     */
+    public function addFilter(callable $filter) : Route
+    {
+        $this->filters[] = $filter;
+        
+        return $this;
+    }
+    
+    /**
+     * 
+     */
+    public function appendGroupMiddleware() : void
     {
         foreach ($this->groups as $group) {
             foreach ($group->getMiddleware() as $middleware) {
@@ -76,7 +155,23 @@ class Route {
         }
     }
     
-    public function process()
+    /**
+     * 
+     */
+    public function appendGroupFilters() : void
+    {
+        foreach ($this->groups as $group) {
+            foreach ($group->getFilters() as $filter) {
+                $this->addFilter($filter);
+            }
+        }
+    }
+    
+    /**
+     * 
+     * @return array
+     */
+    public function process() : array
     {
         
         $actions = [];
@@ -104,6 +199,10 @@ class Route {
             $actions = (array) call_user_func_array($this->callable, [$this->parameters]);
         }
         
+        // add route filters
+        foreach ($this->filters as $filter) {
+            $actions = $filter($actions);
+        }
         
         return $actions;
     }

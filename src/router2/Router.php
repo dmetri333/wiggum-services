@@ -8,7 +8,7 @@ use \wiggum\exceptions\InternalErrorException;
 use \FastRoute\Dispatcher;
 use \FastRoute\RouteCollector;
 
-class Router {
+class Router extends  wiggum\http\Router {
     
     protected $dispatcher;
     protected $routes = [];
@@ -19,9 +19,9 @@ class Router {
      * 
      * @param string $pattern
      * @param mixed $handler
-     * @return \wiggum\services\router\Route
+     * @return Route
      */
-    public function get($pattern, $handler)
+    public function get(string $pattern, $handler) : Route
     {
         return $this->map(['GET'], $pattern, $handler);
     }
@@ -30,9 +30,9 @@ class Router {
      *
      * @param string $pattern
      * @param mixed $handler
-     * @return \wiggum\services\router\Route
+     * @return Route
      */
-    public function post($pattern, $handler)
+    public function post(string $pattern, $handler) : Route
     {
         return $this->map(['POST'], $pattern, $handler);
     }
@@ -41,9 +41,9 @@ class Router {
      *
      * @param string $pattern
      * @param mixed $handler
-     * @return \wiggum\services\router\Route
+     * @return Route
      */
-    public function put($pattern, $handler)
+    public function put(string $pattern, $handler) : Route
     {
         return $this->map(['PUT'], $pattern, $handler);
     }
@@ -52,9 +52,9 @@ class Router {
      *
      * @param string $pattern
      * @param mixed $handler
-     * @return \wiggum\services\router\Route
+     * @return Route
      */
-    public function patch($pattern, $handler)
+    public function patch(string $pattern, $handler) : Route
     {
         return $this->map(['PATCH'], $pattern, $handler);
     }
@@ -63,9 +63,9 @@ class Router {
      *
      * @param string $pattern
      * @param mixed $handler
-     * @return \wiggum\services\router\Route
+     * @return Route
      */
-    public function delete($pattern, $handler)
+    public function delete(string $pattern, $handler) : Route
     {
         return $this->map(['DELETE'], $pattern, $handler);
     }
@@ -74,9 +74,9 @@ class Router {
      *
      * @param string $pattern
      * @param mixed $handler
-     * @return \wiggum\services\router\Route
+     * @return Route
      */
-    public function options($pattern, $handler)
+    public function options(string $pattern, $handler) : Route
     {
         return $this->map(['OPTIONS'], $pattern, $handler);
     }
@@ -85,29 +85,28 @@ class Router {
      *
      * @param string $pattern
      * @param mixed $handler
-     * @return \wiggum\services\router\Route
+     * @return Route
      */
-    public function any($pattern, $handler)
+    public function any(string $pattern, $handler) : Route
     {
         return $this->map(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], $pattern, $handler);
     }
     
     /**
      * 
-     * @param mixed $methods
+     * @param array $methods
      * @param string $pattern
      * @param mixed $handler
      * @throws InvalidArgumentException
-     * @return \wiggum\services\router\Route
+     * @return Route
      */
-    public function map($methods, $pattern, $handler)
+    public function map(array $methods, string $pattern, $handler) : Route
     {
         if (!is_string($pattern)) {
             throw new InvalidArgumentException('Route pattern must be a string');
         }
         
-        // Clean methods
-        $methods = is_string($methods) ? [$methods] : $methods;
+        // uppercase methods
         $methods = array_map('strtoupper', $methods);
         
         // Process groups
@@ -128,11 +127,11 @@ class Router {
 	
     /**
      * 
-     * @param string $attributes
+     * @param string $prefix
      * @param callable $callable
      * @return RouteGroup
      */
-	public function group($prefix, $callable)
+	public function group(string $prefix, callable $callable) : RouteGroup
 	{
 	    
 	    $group = new RouteGroup($prefix, $callable);
@@ -151,7 +150,7 @@ class Router {
 	 * 
 	 * @return string
 	 */
-	protected function processGroups()
+	protected function processGroups() : string
 	{
 	    $pattern = '';
 	    foreach ($this->routeGroups as $group) {
@@ -166,11 +165,11 @@ class Router {
 	/**
 	 * 
 	 * @param Request $request
-	 * @throws PageNotFoundException
 	 * @throws InternalErrorException
-	 * @return \wiggum\services\router\Route
+	 * @throws PageNotFoundException
+	 * @return Route
 	 */
-	public function lookup(Request $request)
+	public function lookup(Request $request) : Route
 	{
 	    
 	    $routeInfo = $this->dispatch($request);
@@ -184,6 +183,7 @@ class Router {
 	            $route = $this->routes[$identifier];
 	            $route->setParameters($parameters);
 	            $route->appendGroupMiddleware();
+	            $route->appendGroupFilters();
 	            
 	            return $route;
 	            
@@ -192,7 +192,7 @@ class Router {
 	            // ... 405 Method Not Allowed
 	            
 	            $allowedMethods = $routeInfo[1];
-	            throw new InternalErrorException('Method Not Allowed ['.implode(', ', $allowedMethods).' accepted], Ref: '.$request->getContextPath(), 405);
+	            throw new InternalErrorException('Method "'.$request->getMethod().'" Not Allowed ['.implode(', ', $allowedMethods).' accepted], Ref: '.$request->getContextPath(), 405);
 	            
 	            break;
 	        case Dispatcher::NOT_FOUND:
@@ -209,9 +209,10 @@ class Router {
 	/**
 	 * 
 	 * @param Request $request
-	 * @return \FastRoute\simpleDispatcher
+	 * @return Dispatcher
 	 */
-	protected function dispatch(Request $request) {
+	protected function dispatch(Request $request) : Dispatcher
+	{
 	    
 	    return $this->createDispatcher()->dispatch(
 	        $request->getMethod(),
@@ -222,9 +223,10 @@ class Router {
 	
 	/**
 	 * 
-	 * @return \FastRoute\simpleDispatcher
+	 * @return Dispatcher
 	 */
-	protected function createDispatcher() {
+	protected function createDispatcher() : Dispatcher
+	{
 	    
 	    if ($this->dispatcher) {
 	        return $this->dispatcher;
