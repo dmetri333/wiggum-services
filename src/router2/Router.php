@@ -210,9 +210,9 @@ class Router implements \wiggum\http\interfaces\Router
 	/**
 	 * 
 	 * @param Request $request
-	 * @return Dispatcher
+	 * @return array
 	 */
-	protected function dispatch(Request $request): Dispatcher
+	protected function dispatch(Request $request): array
 	{
 	    
 	    return $this->createDispatcher()->dispatch(
