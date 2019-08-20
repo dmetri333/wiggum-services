@@ -8,7 +8,7 @@ use \wiggum\exceptions\InternalErrorException;
 use \FastRoute\Dispatcher;
 use \FastRoute\RouteCollector;
 
-class Router extends wiggum\http\Router {
+class Router extends \wiggum\http\Router {
     
     protected $dispatcher;
     protected $routes = [];
