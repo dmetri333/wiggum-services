@@ -1,7 +1,8 @@
 <?php
 namespace wiggum\services\router2;
 
-class Route extends \wiggum\http\Route {
+class Route extends \wiggum\http\interfaces\Route
+{
     
     protected $methods = [];
     protected $pattern;
@@ -33,7 +34,7 @@ class Route extends \wiggum\http\Route {
      * 
      * @return array
      */
-    public function getMethods() : array
+    public function getMethods(): array
     {
         return $this->methods;
     }
@@ -42,7 +43,7 @@ class Route extends \wiggum\http\Route {
      * 
      * @return string
      */
-    public function getPattern() : string
+    public function getPattern(): string
     {
         return $this->pattern;
     }
@@ -51,7 +52,7 @@ class Route extends \wiggum\http\Route {
      * 
      * @return callable
      */
-    public function getCallable() : callable
+    public function getCallable(): callable
     {
         return $this->callable;
     }
@@ -60,7 +61,7 @@ class Route extends \wiggum\http\Route {
      * 
      * @return string
      */
-    public function getIdentifier() : string
+    public function getIdentifier(): string
     {
         return $this->identifier;
     }
@@ -69,7 +70,7 @@ class Route extends \wiggum\http\Route {
      * 
      * @param array $parameters
      */
-    public function setParameters(array $parameters) : void
+    public function setParameters(array $parameters): void
     {
         $this->parameters = $parameters;
     }
@@ -78,7 +79,7 @@ class Route extends \wiggum\http\Route {
      * 
      * @return array
      */
-    public function getParameters() : array
+    public function getParameters(): array
     {
         return $this->parameters;
     }
@@ -87,7 +88,7 @@ class Route extends \wiggum\http\Route {
      * 
      * @param array $middleware
      */
-    public function setMiddleware(array $middleware) : void
+    public function setMiddleware(array $middleware): void
     {
         $this->middleware = $middleware;
     }
@@ -96,7 +97,7 @@ class Route extends \wiggum\http\Route {
      * 
      * @return array
      */
-    public function getMiddleware() : array
+    public function getMiddleware(): array
     {
         return $this->middleware;
     }
@@ -106,7 +107,7 @@ class Route extends \wiggum\http\Route {
      * @param callable $middleware
      * @return Route
      */
-    public function addMiddleware(callable $middleware) : Route
+    public function addMiddleware(callable $middleware): \wiggum\http\interfaces\Route
     {
         $this->middleware[] = $middleware;
         
@@ -117,7 +118,7 @@ class Route extends \wiggum\http\Route {
      * 
      * @param array $filters
      */
-    public function setFilters(array $filters) : void
+    public function setFilters(array $filters): void
     {
         $this->filters = $filters;
     }
@@ -126,7 +127,7 @@ class Route extends \wiggum\http\Route {
      * 
      * @return array
      */
-    public function getFilters() : array
+    public function getFilters(): array
     {
         return $this->filter;
     }
@@ -136,7 +137,7 @@ class Route extends \wiggum\http\Route {
      * @param callable $filter
      * @return Route
      */
-    public function addFilter(callable $filter) : Route
+    public function addFilter(callable $filter): \wiggum\http\interfaces\Route
     {
         $this->filters[] = $filter;
         
@@ -146,7 +147,7 @@ class Route extends \wiggum\http\Route {
     /**
      * 
      */
-    public function appendGroupMiddleware() : void
+    public function appendGroupMiddleware(): void
     {
         foreach ($this->groups as $group) {
             foreach ($group->getMiddleware() as $middleware) {
@@ -158,7 +159,7 @@ class Route extends \wiggum\http\Route {
     /**
      * 
      */
-    public function appendGroupFilters() : void
+    public function appendGroupFilters(): void
     {
         foreach ($this->groups as $group) {
             foreach ($group->getFilters() as $filter) {
@@ -171,7 +172,7 @@ class Route extends \wiggum\http\Route {
      * 
      * @return array
      */
-    public function process() : array
+    public function process(): array
     {
         
         $actions = [];

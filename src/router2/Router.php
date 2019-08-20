@@ -8,7 +8,8 @@ use \wiggum\exceptions\InternalErrorException;
 use \FastRoute\Dispatcher;
 use \FastRoute\RouteCollector;
 
-class Router extends \wiggum\http\Router {
+class Router extends \wiggum\http\interfaces\Router
+{
     
     protected $dispatcher;
     protected $routes = [];
@@ -21,7 +22,7 @@ class Router extends \wiggum\http\Router {
      * @param mixed $handler
      * @return Route
      */
-    public function get(string $pattern, $handler) : Route
+    public function get(string $pattern, $handler): \wiggum\http\interfaces\Route
     {
         return $this->map(['GET'], $pattern, $handler);
     }
@@ -32,7 +33,7 @@ class Router extends \wiggum\http\Router {
      * @param mixed $handler
      * @return Route
      */
-    public function post(string $pattern, $handler) : Route
+    public function post(string $pattern, $handler): \wiggum\http\interfaces\Route
     {
         return $this->map(['POST'], $pattern, $handler);
     }
@@ -43,7 +44,7 @@ class Router extends \wiggum\http\Router {
      * @param mixed $handler
      * @return Route
      */
-    public function put(string $pattern, $handler) : Route
+    public function put(string $pattern, $handler): \wiggum\http\interfaces\Route
     {
         return $this->map(['PUT'], $pattern, $handler);
     }
@@ -54,7 +55,7 @@ class Router extends \wiggum\http\Router {
      * @param mixed $handler
      * @return Route
      */
-    public function patch(string $pattern, $handler) : Route
+    public function patch(string $pattern, $handler): \wiggum\http\interfaces\Route
     {
         return $this->map(['PATCH'], $pattern, $handler);
     }
@@ -65,7 +66,7 @@ class Router extends \wiggum\http\Router {
      * @param mixed $handler
      * @return Route
      */
-    public function delete(string $pattern, $handler) : Route
+    public function delete(string $pattern, $handler): \wiggum\http\interfaces\Route
     {
         return $this->map(['DELETE'], $pattern, $handler);
     }
@@ -76,7 +77,7 @@ class Router extends \wiggum\http\Router {
      * @param mixed $handler
      * @return Route
      */
-    public function options(string $pattern, $handler) : Route
+    public function options(string $pattern, $handler): \wiggum\http\interfaces\Route
     {
         return $this->map(['OPTIONS'], $pattern, $handler);
     }
@@ -87,7 +88,7 @@ class Router extends \wiggum\http\Router {
      * @param mixed $handler
      * @return Route
      */
-    public function any(string $pattern, $handler) : Route
+    public function any(string $pattern, $handler): \wiggum\http\interfaces\Route
     {
         return $this->map(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], $pattern, $handler);
     }
@@ -100,7 +101,7 @@ class Router extends \wiggum\http\Router {
      * @throws InvalidArgumentException
      * @return Route
      */
-    public function map(array $methods, string $pattern, $handler) : Route
+    public function map(array $methods, string $pattern, $handler): \wiggum\http\interfaces\Route
     {
         if (!is_string($pattern)) {
             throw new InvalidArgumentException('Route pattern must be a string');
@@ -131,7 +132,7 @@ class Router extends \wiggum\http\Router {
      * @param callable $callable
      * @return RouteGroup
      */
-	public function group(string $prefix, callable $callable) : RouteGroup
+	public function group(string $prefix, callable $callable): RouteGroup
 	{
 	    
 	    $group = new RouteGroup($prefix, $callable);
@@ -169,7 +170,7 @@ class Router extends \wiggum\http\Router {
 	 * @throws PageNotFoundException
 	 * @return Route
 	 */
-	public function lookup(Request $request) : Route
+	public function lookup(Request $request): \wiggum\http\interfaces\Route
 	{
 	    
 	    $routeInfo = $this->dispatch($request);
@@ -211,7 +212,7 @@ class Router extends \wiggum\http\Router {
 	 * @param Request $request
 	 * @return Dispatcher
 	 */
-	protected function dispatch(Request $request) : Dispatcher
+	protected function dispatch(Request $request): Dispatcher
 	{
 	    
 	    return $this->createDispatcher()->dispatch(
@@ -225,7 +226,7 @@ class Router extends \wiggum\http\Router {
 	 * 
 	 * @return Dispatcher
 	 */
-	protected function createDispatcher() : Dispatcher
+	protected function createDispatcher(): Dispatcher
 	{
 	    
 	    if ($this->dispatcher) {

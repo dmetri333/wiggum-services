@@ -23,7 +23,7 @@ class RouteGroup {
      * 
      * @param Router $router
      */
-    public function collectRoutes(Router $router) : void
+    public function collectRoutes(Router $router): void
     {
         $callable = $this->callable;
 
@@ -34,7 +34,7 @@ class RouteGroup {
      * 
      * @return string
      */
-    public function getPattern() : string
+    public function getPattern(): string
     {
         return $this->prefix;
     }
@@ -43,7 +43,7 @@ class RouteGroup {
      * 
      * @return array
      */
-    public function getMiddleware() : array
+    public function getMiddleware(): array
     {
         return $this->middleware;
     }
@@ -53,7 +53,7 @@ class RouteGroup {
      * @param callable $middleware
      * @return RouteGroup
      */
-    public function addMiddleware(callable $middleware) : RouteGroup
+    public function addMiddleware(callable $middleware): RouteGroup
     {
         $this->middleware[] = $middleware;
         
@@ -64,7 +64,7 @@ class RouteGroup {
      * 
      * @return array
      */
-    public function getFilters() : array
+    public function getFilters(): array
     {
         return $this->filters;
     }
@@ -74,7 +74,7 @@ class RouteGroup {
      * @param callable $filter
      * @return RouteGroup
      */
-    public function addFilter(callable $filter) : RouteGroup
+    public function addFilter(callable $filter): RouteGroup
     {
         $this->filters[] = $filter;
         
