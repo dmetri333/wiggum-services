@@ -14,7 +14,7 @@ class Router implements \wiggum\http\interfaces\Router
     protected $dispatcher;
     protected $routes = [];
     protected $routeGroups = [];
-    protected $routeCounter;
+    protected $routeCounter = 0;
     
     /**
      * 
