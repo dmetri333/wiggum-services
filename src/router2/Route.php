@@ -1,7 +1,7 @@
 <?php
 namespace wiggum\services\router2;
 
-class Route extends \wiggum\http\interfaces\Route
+class Route implements \wiggum\http\interfaces\Route
 {
     
     protected $methods = [];
