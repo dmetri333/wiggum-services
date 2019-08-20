@@ -123,6 +123,24 @@ class CSRFGuard
     }
     
     /**
+     *
+     * @param array $except
+     */
+    public function setExcept(array $except)
+    {
+        $this->except = $except;
+    }
+    
+    /**
+     * 
+     * @return array
+     */
+    public function getExcept()
+    {
+        return $this->except;
+    }
+    
+    /**
      * Generates a new CSRF token
      *
      * @return string
@@ -187,15 +205,6 @@ class CSRFGuard
             }
         }
         return false;
-    }
-    
-    /**
-     * 
-     * @param array $except
-     */
-    protected function setExcept(array $except)
-    {
-        $this->except = $except;
     }
     
     /**
