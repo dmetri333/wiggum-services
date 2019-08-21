@@ -186,7 +186,9 @@ class Route implements \wiggum\http\interfaces\Route
                 $actions['method'] = $routeSegments[1];
             }
             
-            $actions['parameters'] = $this->parameters;
+            if (!empty($this->parameters)) {
+                $actions['parameters'] = $this->parameters;
+            }
             
         } else if (is_array($this->callable)) {
             $routeSegments = explode('@', $this->callable['classPath']);
@@ -197,8 +199,13 @@ class Route implements \wiggum\http\interfaces\Route
                 $actions['method'] = $routeSegments[1];
             }
             
+            if (!empty($this->parameters)) {
+                $actions['parameters'] = $this->parameters;
+            }
             
-            $actions['parameters'] = $this->parameters;
+            if (isset($this->callable['properties'])) {
+                $actions['properties'] = $this->callable['properties'];
+            }
             
         } else if (is_callable($this->callable)) {
             $actions = (array) call_user_func_array($this->callable, [$this->parameters]);
