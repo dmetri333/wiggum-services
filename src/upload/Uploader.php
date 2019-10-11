@@ -16,7 +16,8 @@ class Uploader {
     
     public $uploadPath = '';
     public $allowedTypes = [];
-    public $fileName = '';
+	public $fileName = '';
+	public $fileNameOverride = '';
     public $originalName = '';
     public $createDir = false;
     public $overwrite = false;
@@ -36,7 +37,7 @@ class Uploader {
      * @param boolean $createDir
      * @return \wiggum\services\upload\Uploader
      */
-	public function path($uploadPath, $createDir = false)
+	public function path($uploadPath, $createDir = false): Uploader
 	{
 	    $this->uploadPath = rtrim($uploadPath, '/').'/';
 	    $this->createDir = $createDir;
@@ -49,27 +50,31 @@ class Uploader {
 	 * @param array $allowedTypes
 	 * @return \wiggum\services\upload\Uploader
 	 */
-	public function allowedTypes(array $allowedTypes)
+	public function allowedTypes(array $allowedTypes): Uploader
 	{
 	    $this->allowedTypes = $allowedTypes;
 	    
 	    return $this;
 	}
 	
-	/*public function fileName($fileName)
+	/**
+	 *
+	 * @param string $fileName
+	 * @return \wiggum\services\upload\Uploader
+	 */
+	public function fileName(string $fileName): Uploader
 	{
-	    $this->fileName = $fileName;
+	    $this->fileNameOverride = $fileName;
 	    
 	    return $this;
 	}
-	*/
 	
 	/**
 	 * 
 	 * @param integer $maxSize
 	 * @return \wiggum\services\upload\Uploader
 	 */
-	public function maxSize($maxSize)
+	public function maxSize($maxSize): Uploader
 	{
 	    $this->maxSize = $maxSize < 0 ? 0 : (int) $maxSize;
 	    
@@ -81,7 +86,7 @@ class Uploader {
 	 * @param integer $maxWidth
 	 * @return \wiggum\services\upload\Uploader
 	 */
-	public function maxWidth($maxWidth)
+	public function maxWidth($maxWidth): Uploader
 	{
 	    $this->maxWidth = $maxWidth < 0 ? 0 : (int) $maxWidth;
 	    
@@ -93,7 +98,7 @@ class Uploader {
 	 * @param integer $maxHeight
 	 * @return \wiggum\services\upload\Uploader
 	 */
-	public function maxHeight($maxHeight)
+	public function maxHeight($maxHeight): Uploader
 	{
 	    $this->maxHeight = $maxHeight < 0 ? 0 : (int) $maxHeight;
 	    
@@ -105,7 +110,7 @@ class Uploader {
 	 * @param integer $minWidth
 	 * @return \wiggum\services\upload\Uploader
 	 */
-	public function minWidth($minWidth)
+	public function minWidth($minWidth): Uploader
 	{
 	    $this->minWidth = $minWidth < 0 ? 0 : (int) $minWidth;
 	    
@@ -117,7 +122,7 @@ class Uploader {
 	 * @param integer $minHeight
 	 * @return \wiggum\services\upload\Uploader
 	 */
-	public function minHeight($minHeight)
+	public function minHeight($minHeight): Uploader
 	{
 	    $this->minHeight = $minHeight < 0 ? 0 : (int) $minHeight;
 	    
@@ -129,7 +134,7 @@ class Uploader {
 	 * @param integer $maxFilenameIncrement
 	 * @return \wiggum\services\upload\Uploader
 	 */
-	public function maxFilenameIncrement($maxFilenameIncrement)
+	public function maxFilenameIncrement($maxFilenameIncrement): Uploader
 	{
 	    $this->maxFilenameIncrement = $maxFilenameIncrement;
 	    
@@ -141,7 +146,7 @@ class Uploader {
 	 * @param boolean $xssClean
 	 * @return \wiggum\services\upload\Uploader
 	 */
-	public function xssClean($xssClean)
+	public function xssClean($xssClean): Uploader
 	{
 	    $this->xssClean = $xssClean;
 	    
@@ -153,7 +158,7 @@ class Uploader {
 	 * @param boolean $encryptName
 	 * @return \wiggum\services\upload\Uploader
 	 */
-	public function encryptName($encryptName)
+	public function encryptName($encryptName): Uploader
 	{
 	    $this->encryptName = $encryptName;
 	    
@@ -165,7 +170,8 @@ class Uploader {
 	 * @param array $file
 	 * @return boolean
 	 */
-	public function upload($file) {
+	public function upload($file)
+	{
  	   
 	    if (!isset($file)) {
 	        $this->setError('upload.noFileSelected');
@@ -225,7 +231,24 @@ class Uploader {
 	    if (!$this->isAllowedFileType()) {
 	        $this->setError('upload.invalidFiletype');
 	        return false;
-	    }
+		}
+
+		if ($this->fileNameOverride !== '') {
+			$this->fileName = $this->prepFileName($this->fileNameOverride);
+			
+			// If no extension was provided in the file_name config item, use the uploaded one
+			if (strpos($this->fileNameOverride, '.') === false) {
+				$this->fileName .= $this->fileExt;
+			} else {
+				// An extension was provided, let's have it!
+				$this->fileExt	= FileHelper::extension($this->fileNameOverride);
+			}
+
+			if (!$this->isAllowedFileType()) {
+				$this->setError('upload.invalidFiletype');
+				return false;
+			}
+		}
 	    
 	    // Convert the file size to kilobytes
 	    if ($this->fileSize > 0) {
