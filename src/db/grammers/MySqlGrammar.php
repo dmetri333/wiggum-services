@@ -335,7 +335,24 @@ class MySqlGrammar extends Grammar {
 	    return $type.'('.$this->wrap($where['column']).') '.$where['operator'].' ?';
 	}
 	
-	
+	/**
+	 * Compile a "where JSON contains" clause.
+	 *
+	 * @param  \wiggum\services\db\Builder  $query
+	 * @param  array  $where
+	 * @return string
+	 */
+	protected function whereJsonContains(Builder $query, $where)
+	{
+	    $value = '?';
+	    
+	    $not = $where['not'] ? 'not ' : '';
+	    
+	    [$field, $path] = $this->wrapJsonFieldAndPath($where['column']);
+	    
+	    return $not.'json_contains('.$field.', '.$value.$path.')';
+	}
+
 	/**
 	 * Compile the "group by" portions of the query.
 	 *

@@ -661,43 +661,28 @@ SQL;
         
     }
     
-   
-  
-    /*
-   
-    public function testWhereJsonContainsMySql()
+    public function testWhereJsonContains()
     {
-        $builder = $this->getMySqlBuilder();
+        $builder = $this->getBuilder();
         $builder->select('*')->from('users')->whereJsonContains('options', ['en']);
         $this->assertEquals('select * from `users` where json_contains(`options`, ?)', $builder->toSql());
         $this->assertEquals(['["en"]'], $builder->getBindings());
         
-        $builder = $this->getMySqlBuilder();
+        $builder = $this->getBuilder();
         $builder->select('*')->from('users')->whereJsonContains('users.options->languages', ['en']);
         $this->assertEquals('select * from `users` where json_contains(`users`.`options`, ?, \'$."languages"\')', $builder->toSql());
         $this->assertEquals(['["en"]'], $builder->getBindings());
-        
-        $builder = $this->getMySqlBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->orWhereJsonContains('options->languages', new Raw("'[\"en\"]'"));
-        $this->assertEquals('select * from `users` where `id` = ? or json_contains(`options`, \'["en"]\', \'$."languages"\')', $builder->toSql());
-        $this->assertEquals([1], $builder->getBindings());
     }
     
-   
-    public function testWhereJsonDoesntContainMySql()
+    public function testWhereJsonDoesntContain()
     {
-        $builder = $this->getMySqlBuilder();
+        $builder = $this->getBuilder();
         $builder->select('*')->from('users')->whereJsonDoesntContain('options->languages', ['en']);
         $this->assertEquals('select * from `users` where not json_contains(`options`, ?, \'$."languages"\')', $builder->toSql());
         $this->assertEquals(['["en"]'], $builder->getBindings());
-        
-        $builder = $this->getMySqlBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->orWhereJsonDoesntContain('options->languages', new Raw("'[\"en\"]'"));
-        $this->assertEquals('select * from `users` where `id` = ? or not json_contains(`options`, \'["en"]\', \'$."languages"\')', $builder->toSql());
-        $this->assertEquals([1], $builder->getBindings());
     }
-    
- 
+  
+    /*
     public function testWhereJsonLengthMySql()
     {
         $builder = $this->getMySqlBuilder();

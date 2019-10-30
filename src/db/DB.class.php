@@ -135,7 +135,16 @@ class DB {
 		try {
 			$statement = $this->pdo->prepare($query);
 			$statement->setFetchMode($fetchMode, $instance);
-			if ($statement->execute($values)) {
+
+			foreach ($values as $key => &$val) {
+			    if (is_int($val)) {
+			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
+			    } else {
+			        $statement->bindParam($key+1, $val);
+			    }
+			}
+
+			if ($statement->execute()) {
 				$obj = $statement->fetch($fetchMode);
 				if (!$obj) return null;
 			} else {
@@ -164,7 +173,16 @@ class DB {
 		try {
 			$statement = $this->pdo->prepare($query);
 			$statement->setFetchMode($fetchMode, $instance);
-			if ($statement->execute($values)) {
+
+			foreach ($values as $key => &$val) {
+			    if (is_int($val)) {
+			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
+			    } else {
+			        $statement->bindParam($key+1, $val);
+			    }
+			}
+
+			if ($statement->execute()) {
 				while (($obj = $statement->fetch($fetchMode))) {
 					if (isset($obj))
 						$objects[] = clone $obj;
@@ -191,7 +209,16 @@ class DB {
 		$row = null;
 		try {
 			$statement = $this->pdo->prepare($query);
-			if ($statement->execute($values)) {
+			
+			foreach ($values as $key => &$val) {
+			    if (is_int($val)) {
+			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
+			    } else {
+			        $statement->bindParam($key+1, $val);
+			    }
+			}
+
+			if ($statement->execute()) {
 				$row = $statement->fetch($fetchMode);
 				if ($row === false) $row = null;
 			} else {
@@ -215,7 +242,16 @@ class DB {
 		$rows = array();
 		try {
 			$statement = $this->pdo->prepare($query);
-			if ($statement->execute($values)) {
+
+			foreach ($values as $key => &$val) {
+			    if (is_int($val)) {
+			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
+			    } else {
+			        $statement->bindParam($key+1, $val);
+			    }
+			}
+
+			if ($statement->execute()) {
 				$rows = $statement->fetchAll($fetchMode);
 			} else {
 				$errorInfo = $statement->errorInfo();
@@ -239,7 +275,16 @@ class DB {
 		$col = null;
 		try {
 			$statement = $this->pdo->prepare($query);
-			if ($statement->execute($values)) {
+
+			foreach ($values as $key => &$val) {
+			    if (is_int($val)) {
+			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
+			    } else {
+			        $statement->bindParam($key+1, $val);
+			    }
+			}
+
+			if ($statement->execute()) {
 				$col = $statement->fetchColumn();
 				if (!$col) return null;
 			} else {
@@ -263,7 +308,16 @@ class DB {
 		$result = false;
 		try {
 			$statement = $this->pdo->prepare($query);
-			if ($statement->execute($values)) {
+
+			foreach ($values as $key => &$val) {
+			    if (is_int($val)) {
+			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
+			    } else {
+			        $statement->bindParam($key+1, $val);
+			    }
+			}
+			
+			if ($statement->execute()) {
 				if ($lastInsId) {
 					$result = $this->pdo->lastInsertId();
 				} else {
