@@ -656,6 +656,39 @@ class Builder {
 	}
 	
 	/**
+     * Add a "where JSON length" clause to the query.
+     *
+     * @param  string  $column
+     * @param  mixed  $operator
+     * @param  mixed  $value
+     * @param  string  $boolean
+     * @return $this
+     */
+    public function whereJsonLength($column, $operator, $value = null, $boolean = 'and')
+    {
+        $type = 'JsonLength';
+		
+        $this->wheres[] = compact('type', 'column', 'operator', 'value', 'boolean');
+		
+		$this->addBinding($value, 'where');
+        
+        return $this;
+	}
+
+	  /**
+     * Add a "or where JSON length" clause to the query.
+     *
+     * @param  string  $column
+     * @param  mixed  $operator
+     * @param  mixed  $value
+     * @return $this
+     */
+    public function orWhereJsonLength($column, $operator, $value = null)
+    {
+        return $this->whereJsonLength($column, $operator, $value, 'or');
+    }
+	
+	/**
 	 *
 	 * @param  array|string $column,...
 	 * @return $this

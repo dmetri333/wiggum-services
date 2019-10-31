@@ -681,32 +681,21 @@ SQL;
         $this->assertEquals('select * from `users` where not json_contains(`options`, ?, \'$."languages"\')', $builder->toSql());
         $this->assertEquals(['["en"]'], $builder->getBindings());
     }
-  
-    /*
-    public function testWhereJsonLengthMySql()
+
+    public function testWhereJsonLength()
     {
-        $builder = $this->getMySqlBuilder();
-        $builder->select('*')->from('users')->whereJsonLength('options', 0);
+        $builder = $this->getBuilder();
+        $builder->select('*')->from('users')->whereJsonLength('options', '=', 0);
         $this->assertEquals('select * from `users` where json_length(`options`) = ?', $builder->toSql());
         $this->assertEquals([0], $builder->getBindings());
         
-        $builder = $this->getMySqlBuilder();
+        $builder = $this->getBuilder();
         $builder->select('*')->from('users')->whereJsonLength('users.options->languages', '>', 0);
         $this->assertEquals('select * from `users` where json_length(`users`.`options`, \'$."languages"\') > ?', $builder->toSql());
         $this->assertEquals([0], $builder->getBindings());
         
-        $builder = $this->getMySqlBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->orWhereJsonLength('options->languages', new Raw('0'));
-        $this->assertEquals('select * from `users` where `id` = ? or json_length(`options`, \'$."languages"\') = 0', $builder->toSql());
-        $this->assertEquals([1], $builder->getBindings());
-        
-        $builder = $this->getMySqlBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->orWhereJsonLength('options->languages', '>', new Raw('0'));
-        $this->assertEquals('select * from `users` where `id` = ? or json_length(`options`, \'$."languages"\') > 0', $builder->toSql());
-        $this->assertEquals([1], $builder->getBindings());
     }
-    */
-   
+
     /*
      public function testJoinsWithNestedConditions()
      {
