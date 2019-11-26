@@ -250,12 +250,7 @@ class Uploader {
 			}
 		}
 	    
-	    // Convert the file size to kilobytes
-	    if ($this->fileSize > 0) {
-	        $this->fileSize = round($this->fileSize/1024, 2);
-	    }
-	    
- 	    // Is the file size within the allowed maximum?
+	    // Is the file size within the allowed maximum?
  	    if (!$this->isAllowedFilesize()) {
  	        $this->setError('upload.invalidFilesize');
  	        return false;
