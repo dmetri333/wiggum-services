@@ -305,7 +305,7 @@ class Builder {
 		// received when the method was called and pass it into the nested where.
 		if (is_array($column)) {
 			foreach ($column as $key => $value) {
-				$this->where($key, '=', $value);
+				$this->where($key, '=', $value, $boolean);
 			}
 			
 			return $this;

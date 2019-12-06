@@ -9,6 +9,7 @@ class DB {
 	
 	private $pdo;
 	private $transactionError = false;
+	private $prefix = '';
 	
 	/**
 	 * 
@@ -17,6 +18,8 @@ class DB {
 	public function __construct($config) {
 	    
 	    if (!empty($config)) {
+			$this->prefix = isset($config['prefix']) ? $config['prefix'] : '';
+
 	        $port = isset($config['port']) ? $config['port'] : '3306';
 	        $characterSet = isset($config['characterSet']) ? $config['characterSet'] : 'utf8';
 	        
@@ -40,7 +43,7 @@ class DB {
 	public function table($table) {
 		$query = new Builder($this, new MySqlGrammar());
 		
-		return $query->from($table);
+		return $query->from($this->prefix.$table);
 	}
 	
 	/**
