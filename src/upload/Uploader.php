@@ -46,6 +46,18 @@ class Uploader {
 	}
 	
 	/**
+	 *
+	 * @param bool $overwrite
+	 * @return \wiggum\services\upload\Uploader
+	 */
+	public function overwrite(bool $overwrite): Uploader
+	{
+	    $this->overwrite = $overwrite;
+	    
+	    return $this;
+	}
+	
+	/**
 	 * 
 	 * @param array $allowedTypes
 	 * @return \wiggum\services\upload\Uploader
@@ -59,7 +71,7 @@ class Uploader {
 	
 	/**
 	 *
-	 * @param string $fileName
+	 * @param bool $fileName
 	 * @return \wiggum\services\upload\Uploader
 	 */
 	public function fileName(string $fileName): Uploader
