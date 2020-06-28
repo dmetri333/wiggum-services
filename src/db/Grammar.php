@@ -3,6 +3,14 @@ namespace wiggum\services\db;
 
 class Grammar {
 	
+	protected $aggregateFunctions = [
+		'count', 
+		'sum', 
+		'min', 
+		'max', 
+		'avg'
+	];
+
     /**
      * Remove the leading boolean from a statement.
      *
@@ -60,6 +68,12 @@ class Grammar {
 		    return $this->wrapAliasedValue($value);
 		}
 	
+		if (preg_match("/((.*)\((.*)\))/", $value, $matches)) {
+			if (in_array(strtolower($matches[2]), $this->aggregateFunctions)) {
+				return $matches[2].'('.$this->wrap($matches[3]).')';
+			}
+		}
+
 		if ($this->isJsonSelector($value)) {
 		    return $this->wrapJsonSelector($value);
 		}

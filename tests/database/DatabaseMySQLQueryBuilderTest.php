@@ -486,6 +486,113 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     
     /* Aggregate */
     
+    public function testAggregateFunctions()
+    {
+        $builder = $this->getBuilder();
+        $builder->select('count(*)')->from('users');
+        $this->assertEquals('select count(*) from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('count(*) as bar')->from('users');
+        $this->assertEquals('select count(*) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('count(foo) as bar')->from('users');
+        $this->assertEquals('select count(`foo`) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('count(x.y) as bar')->from('users');
+        $this->assertEquals('select count(`x`.`y`) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('count(x.y) as bar.foo')->from('users');
+        $this->assertEquals('select count(`x`.`y`) as `bar.foo` from `users`', $builder->toSql());
+
+
+        $builder = $this->getBuilder();
+        $builder->select('sum(*)')->from('users');
+        $this->assertEquals('select sum(*) from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('sum(*) as bar')->from('users');
+        $this->assertEquals('select sum(*) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('sum(`foo`) as bar')->from('users');
+        $this->assertEquals('select sum(`foo`) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('sum(x.y) as bar')->from('users');
+        $this->assertEquals('select sum(`x`.`y`) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('sum(x.y) as bar.foo')->from('users');
+        $this->assertEquals('select sum(`x`.`y`) as `bar.foo` from `users`', $builder->toSql());
+
+
+        $builder = $this->getBuilder();
+        $builder->select('min(*) as bar')->from('users');
+        $this->assertEquals('select min(*) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('min(*) as bar')->from('users');
+        $this->assertEquals('select min(*) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('min(foo) as bar')->from('users');
+        $this->assertEquals('select min(`foo`) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('min(x.y) as bar')->from('users');
+        $this->assertEquals('select min(`x`.`y`) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('min(x.y) as bar.foo')->from('users');
+        $this->assertEquals('select min(`x`.`y`) as `bar.foo` from `users`', $builder->toSql());
+
+
+        $builder = $this->getBuilder();
+        $builder->select('max(*) as bar')->from('users');
+        $this->assertEquals('select max(*) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('max(*) as bar')->from('users');
+        $this->assertEquals('select max(*) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('max(foo) as bar')->from('users');
+        $this->assertEquals('select max(`foo`) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('max(x.y) as bar')->from('users');
+        $this->assertEquals('select max(`x`.`y`) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('max(x.y) as bar.foo')->from('users');
+        $this->assertEquals('select max(`x`.`y`) as `bar.foo` from `users`', $builder->toSql());
+
+
+        $builder = $this->getBuilder();
+        $builder->select('avg(*) as bar')->from('users');
+        $this->assertEquals('select avg(*) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('avg(*) as bar')->from('users');
+        $this->assertEquals('select avg(*) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('avg(foo) as bar')->from('users');
+        $this->assertEquals('select avg(`foo`) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('avg(x.y) as bar')->from('users');
+        $this->assertEquals('select avg(`x`.`y`) as `bar` from `users`', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('avg(x.y) as bar.foo')->from('users');
+        $this->assertEquals('select avg(`x`.`y`) as `bar.foo` from `users`', $builder->toSql());
+    }
+
    // public function testAggregateFunctions()
    // {
         
