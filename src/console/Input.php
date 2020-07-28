@@ -108,8 +108,7 @@ class Input {
         }
         
         if (!empty($this->accept) && !in_array($line, $this->accept)) {
-            $this->prompt($str);
-            return;
+            return $this->prompt($str);
         }
         
         return $line;
