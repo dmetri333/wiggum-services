@@ -77,7 +77,7 @@ class Input {
         
         $acceptStr = '';
         if (!empty($this->accept) && $this->headsUp) {
-            $acceptStr = ' ['.implode($this->accept, '/').']';
+            $acceptStr = ' ['.implode('/', $this->accept).']';
         }
         
         echo $str . $acceptStr;
