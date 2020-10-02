@@ -8,7 +8,8 @@ class Grammar {
 		'sum', 
 		'min', 
 		'max', 
-		'avg'
+		'avg',
+		'date'
 	];
 
     /**
