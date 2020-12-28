@@ -231,7 +231,8 @@ class CSRFGuard
      */
     protected function getTokenFromRequest(Request $request)
     {
-        $token = $request->getParameter($this->key) ?: $request->getHeader('X-CSRF-TOKEN');
+        $headerToken = $request->getHeader('x-csrf-token') ?: $request->getHeader('X-CSRF-TOKEN');
+        $token = $request->getParameter($this->key) ?: $headerToken;
         
         return $token;
     }
