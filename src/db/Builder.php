@@ -817,9 +817,11 @@ class Builder {
 		array_unshift($this->columns, $columnKey);
 		
 		if ($assoc) {
-			return array_map('reset', $this->db->fetchRows($this->toSql(), $this->getBindings(), PDO::FETCH_GROUP|PDO::FETCH_ASSOC));
+			$rows = $this->db->fetchRows($this->toSql(), $this->getBindings(), PDO::FETCH_GROUP|PDO::FETCH_ASSOC);
+			return array_map('reset', $rows);
 		} else {
-			return array_map('reset', $this->db->fetchRows($this->toSql(), $this->getBindings(), PDO::FETCH_GROUP|PDO::FETCH_OBJ));
+			$rows = $this->db->fetchRows($this->toSql(), $this->getBindings(), PDO::FETCH_GROUP|PDO::FETCH_OBJ);
+			return array_map('reset', $rows);
 		}
 	}
 	
