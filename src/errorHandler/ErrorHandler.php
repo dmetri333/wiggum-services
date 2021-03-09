@@ -54,6 +54,7 @@ class ErrorHandler extends Handler {
 		
 		$response->withStatus(500);
 		$response->setContentType($contentType);
+		$response->addHeader('Access-Control-Allow-Origin', '*');
 		$response->setOutput($output);
 		return $response;
 	}
@@ -80,4 +81,3 @@ class ErrorHandler extends Handler {
 	}
 
 }
-?>

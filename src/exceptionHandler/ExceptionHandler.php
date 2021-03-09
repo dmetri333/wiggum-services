@@ -55,6 +55,7 @@ class ExceptionHandler extends Handler {
 		
 		$response->withStatus($exception->getCode());
 		$response->setContentType($contentType);
+		$response->addHeader('Access-Control-Allow-Origin', '*');
 		$response->setOutput($output);
 		return $response;
 	}
@@ -93,4 +94,3 @@ class ExceptionHandler extends Handler {
 	}
 	
 }
-?>
