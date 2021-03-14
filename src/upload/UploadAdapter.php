@@ -1,43 +1,55 @@
 <?php
 namespace wiggum\services\upload;
 
+use wiggum\foundation\Application;
 use wiggum\commons\helpers\FileHelper;
 use wiggum\commons\helpers\SecurityHelper;
 
-class Uploader {
-
-    private $errors     = [];
-    private $imgMimes   = ['image/gif', 'image/jpeg', 'image/png'];
-    
-    public $fileTemp;
-    public $fileSize;
-    public $fileType;
-    public $fileExt;
-    
-    public $uploadPath = '';
-    public $allowedTypes = [];
-	public $fileName = '';
-	public $fileNameOverride = '';
-    public $originalName = '';
-    public $createDir = false;
-    public $overwrite = false;
-    public $maxSize = 0;
-    public $maxWidth = 0;
-    public $maxHeight = 0;
-    public $minWidth = 0;
-    public $minHeight = 0; 
-    public $maxFilenameIncrement = 100;
-    public $encryptName = false;
-    public $xssClean = false;
-    public $removeSpaces = true;
+abstract class UploadAdapter {
 	
+	private $app;
+
+    protected $errors     = [];
+    protected $imgMimes   = ['image/gif', 'image/jpeg', 'image/png'];
+    
+    protected $fileTemp;
+    protected $fileSize;
+    protected $fileType;
+    protected $fileExt;
+    
+    protected $uploadPath = '';
+    protected $allowedTypes = [];
+	protected $fileName = '';
+	protected $fileNameOverride = '';
+    protected $originalName = '';
+    protected $createDir = false;
+    protected $overwrite = false;
+    protected $maxSize = 0;
+    protected $maxWidth = 0;
+    protected $maxHeight = 0;
+    protected $minWidth = 0;
+    protected $minHeight = 0; 
+    protected $maxFilenameIncrement = 100;
+    protected $encryptName = false;
+    protected $xssClean = false;
+    protected $removeSpaces = true;
+
+	/**
+	 *
+	 * @param Application $app
+	 */
+	public function __construct(Application $app)
+	{
+		$this->app = $app;
+	}
+
     /**
      * 
      * @param string $uploadPath
      * @param boolean $createDir
-     * @return \wiggum\services\upload\Uploader
+     * @return \wiggum\services\upload\UploadAdapter
      */
-	public function path($uploadPath, $createDir = false): Uploader
+	public function path(string $uploadPath, $createDir = false): UploadAdapter
 	{
 	    $this->uploadPath = rtrim($uploadPath, '/').'/';
 	    $this->createDir = $createDir;
@@ -48,9 +60,9 @@ class Uploader {
 	/**
 	 *
 	 * @param bool $overwrite
-	 * @return \wiggum\services\upload\Uploader
+	 * @return \wiggum\services\upload\UploadAdapter
 	 */
-	public function overwrite(bool $overwrite): Uploader
+	public function overwrite(bool $overwrite): UploadAdapter
 	{
 	    $this->overwrite = $overwrite;
 	    
@@ -60,9 +72,9 @@ class Uploader {
 	/**
 	 * 
 	 * @param array $allowedTypes
-	 * @return \wiggum\services\upload\Uploader
+	 * @return \wiggum\services\upload\UploadAdapter
 	 */
-	public function allowedTypes(array $allowedTypes): Uploader
+	public function allowedTypes(array $allowedTypes): UploadAdapter
 	{
 	    $this->allowedTypes = $allowedTypes;
 	    
@@ -72,9 +84,9 @@ class Uploader {
 	/**
 	 *
 	 * @param bool $fileName
-	 * @return \wiggum\services\upload\Uploader
+	 * @return \wiggum\services\upload\UploadAdapter
 	 */
-	public function fileName(string $fileName): Uploader
+	public function fileName(string $fileName): UploadAdapter
 	{
 	    $this->fileNameOverride = $fileName;
 	    
@@ -84,9 +96,9 @@ class Uploader {
 	/**
 	 * 
 	 * @param integer $maxSize
-	 * @return \wiggum\services\upload\Uploader
+	 * @return \wiggum\services\upload\UploadAdapter
 	 */
-	public function maxSize($maxSize): Uploader
+	public function maxSize($maxSize): UploadAdapter
 	{
 	    $this->maxSize = $maxSize < 0 ? 0 : (int) $maxSize;
 	    
@@ -96,9 +108,9 @@ class Uploader {
 	/**
 	 * 
 	 * @param integer $maxWidth
-	 * @return \wiggum\services\upload\Uploader
+	 * @return \wiggum\services\upload\UploadAdapter
 	 */
-	public function maxWidth($maxWidth): Uploader
+	public function maxWidth($maxWidth): UploadAdapter
 	{
 	    $this->maxWidth = $maxWidth < 0 ? 0 : (int) $maxWidth;
 	    
@@ -108,9 +120,9 @@ class Uploader {
 	/**
 	 * 
 	 * @param integer $maxHeight
-	 * @return \wiggum\services\upload\Uploader
+	 * @return \wiggum\services\upload\UploadAdapter
 	 */
-	public function maxHeight($maxHeight): Uploader
+	public function maxHeight($maxHeight): UploadAdapter
 	{
 	    $this->maxHeight = $maxHeight < 0 ? 0 : (int) $maxHeight;
 	    
@@ -120,9 +132,9 @@ class Uploader {
 	/**
 	 * 
 	 * @param integer $minWidth
-	 * @return \wiggum\services\upload\Uploader
+	 * @return \wiggum\services\upload\UploadAdapter
 	 */
-	public function minWidth($minWidth): Uploader
+	public function minWidth($minWidth): UploadAdapter
 	{
 	    $this->minWidth = $minWidth < 0 ? 0 : (int) $minWidth;
 	    
@@ -132,9 +144,9 @@ class Uploader {
 	/**
 	 * 
 	 * @param integer $minHeight
-	 * @return \wiggum\services\upload\Uploader
+	 * @return \wiggum\services\upload\UploadAdapter
 	 */
-	public function minHeight($minHeight): Uploader
+	public function minHeight($minHeight): UploadAdapter
 	{
 	    $this->minHeight = $minHeight < 0 ? 0 : (int) $minHeight;
 	    
@@ -144,9 +156,9 @@ class Uploader {
 	/**
 	 * 
 	 * @param integer $maxFilenameIncrement
-	 * @return \wiggum\services\upload\Uploader
+	 * @return \wiggum\services\upload\UploadAdapter
 	 */
-	public function maxFilenameIncrement($maxFilenameIncrement): Uploader
+	public function maxFilenameIncrement($maxFilenameIncrement): UploadAdapter
 	{
 	    $this->maxFilenameIncrement = $maxFilenameIncrement;
 	    
@@ -156,9 +168,9 @@ class Uploader {
 	/**
 	 * 
 	 * @param boolean $xssClean
-	 * @return \wiggum\services\upload\Uploader
+	 * @return \wiggum\services\upload\UploadAdapter
 	 */
-	public function xssClean($xssClean): Uploader
+	public function xssClean($xssClean): UploadAdapter
 	{
 	    $this->xssClean = $xssClean;
 	    
@@ -168,159 +180,21 @@ class Uploader {
 	/**
 	 * 
 	 * @param boolean $encryptName
-	 * @return \wiggum\services\upload\Uploader
+	 * @return \wiggum\services\upload\UploadAdapter
 	 */
-	public function encryptName($encryptName): Uploader
+	public function encryptName($encryptName): UploadAdapter
 	{
 	    $this->encryptName = $encryptName;
 	    
 	    return $this;
 	}
-	
+
 	/**
 	 * 
 	 * @param array $file
 	 * @return boolean
 	 */
-	public function upload($file)
-	{
- 	   
-	    if (!isset($file)) {
-	        $this->setError('upload.noFileSelected');
-	        return false;
-	    }
-	    
-	    // Is the upload path valid?
-	    if (!$this->validateUploadPath()) {
-	        // errors will already be set by validateUploadPath() so just return false
-	        return false;
-	    }
-	    
-	    // Was the file able to be uploaded? If not, determine the reason why.
-	    if (!is_uploaded_file($file['tmp_name'])) {
-	        $error = isset($file['error']) ? $file['error'] : 4;
-	        
-	        switch ($error)
-	        {
-	            case UPLOAD_ERR_INI_SIZE:
-	                $this->setError('upload.fileExceedsLimit');
-	                break;
-	            case UPLOAD_ERR_FORM_SIZE:
-	                $this->setError('upload.fileExceedsFormLimit');
-	                break;
-	            case UPLOAD_ERR_PARTIAL:
-	                $this->setError('upload.filePartial');
-	                break;
-	            case UPLOAD_ERR_NO_FILE:
-	                $this->setError('upload.noFileSelected');
-	                break;
-	            case UPLOAD_ERR_NO_TMP_DIR:
-	                $this->setError('upload.noTempDirectory');
-	                break;
-	            case UPLOAD_ERR_CANT_WRITE:
-	                $this->setError('upload.unableToWriteFile');
-	                break;
-	            case UPLOAD_ERR_EXTENSION:
-	                $this->setError('upload.stoppedExtension');
-	                break;
-	            default:
-	                $this->setError('upload.noFileSelected');
-	                break;
-	        }
-	        
-	        return false;
-	    }
-	    
- 	    // Set the uploaded data as class variables
- 	    $this->fileTemp       = $file['tmp_name'];
- 	    $this->fileSize       = $file['size'];
- 	    $this->fileName       = $this->prepFileName($file['name']);
- 	    $this->originalName   = $this->fileName;
- 	    $this->fileExt	      = FileHelper::extension($this->fileName);
- 	    $this->fileType       = FileHelper::mimeType($file['tmp_name'], $file['type']);
- 	    
-	    // Is the file type allowed to be uploaded?
-	    if (!$this->isAllowedFileType()) {
-	        $this->setError('upload.invalidFiletype');
-	        return false;
-		}
-
-		if ($this->fileNameOverride !== '') {
-			$this->fileName = $this->prepFileName($this->fileNameOverride);
-			
-			// If no extension was provided in the file_name config item, use the uploaded one
-			if (strpos($this->fileNameOverride, '.') === false) {
-				$this->fileName .= $this->fileExt;
-			} else {
-				// An extension was provided, let's have it!
-				$this->fileExt	= FileHelper::extension($this->fileNameOverride);
-			}
-
-			if (!$this->isAllowedFileType()) {
-				$this->setError('upload.invalidFiletype');
-				return false;
-			}
-		}
-	    
-	    // Is the file size within the allowed maximum?
- 	    if (!$this->isAllowedFilesize()) {
- 	        $this->setError('upload.invalidFilesize');
- 	        return false;
- 	    }
-	    
-	    // Are the image dimensions within the allowed size?
-	    // Note: This can fail if the server has an open_basedir restriction.
-	    if (!$this->isAllowedDimensions()) {
-	        $this->setError('upload.invalidDimensions');
-	        return false;
-	    }
-	    
- 	    // Sanitize the file name for security
-	    $this->fileName = SecurityHelper::sanitizeFilename($this->fileName);
-	    
-	    // Remove white spaces in the name
-	    if ($this->removeSpaces === true) {
-	        $this->fileName = preg_replace('/\s+/', '_', $this->fileName);
-	    }
-	    
-	    /*
-	     * Validate the file name
-	     * This function appends an number onto the end of
-	     * the file if one with the same name already exists.
-	     * If it returns false there was a problem.
-	     */
-	    if (false === ($this->fileName = $this->createFileName($this->fileName))) {
-	        $this->setError('upload.badFilename');
-	        return false;
-	    }
-	    
-	    /*
-	     * Run the file through the XSS hacking filter
-	     * This helps prevent malicious code from being
-	     * embedded within a file. Scripts can easily
-	     * be disguised as images or other file types.
-	     */
-	    if ($this->xssClean && $this->doXssClean() === false) {
-	        $this->setError('upload.unableToWriteFile');
-	        return false;
-	    }
-	    
-	    /*
-	     * Move the file to the final destination
-	     * To deal with different server configurations
-	     * we'll attempt to use copy() first. If that fails
-	     * we'll use move_uploaded_file(). One of the two should
-	     * reliably work in most environments
-	     */
-	    if (!@copy($this->fileTemp, $this->uploadPath.$this->fileName)) {
-	        if (!@move_uploaded_file($this->fileTemp, $this->uploadPath.$this->fileName)) {
-	            $this->setError('upload.destinationError');
-	            return false;
-	        }
-	    }
-	   
-	    return true;
- 	}
+	public abstract function upload(array $file): bool;
 
  	/**
  	 * Finalized Data Array
@@ -328,7 +202,7 @@ class Uploader {
  	 * @param string $index
  	 * @return object
  	 */
- 	public function data($index = null)
+ 	public function data($index = null): object
  	{
  	    $data = [
  	        'fileName'		=> $this->fileName,
@@ -350,7 +224,7 @@ class Uploader {
  	    
  	    return (object) $data;
  	}
- 	
+
  	/**
  	 * Prep Filename
  	 *
@@ -362,7 +236,7 @@ class Uploader {
  	 * @param string $filename
  	 * @return string
  	 */
- 	private function prepFileName($filename)
+ 	protected function prepFileName($filename): string
  	{
  	    $extPos = strrpos($filename, '.');
  	    if (empty($this->allowedTypes) || $extPos === false) {
@@ -377,9 +251,9 @@ class Uploader {
  	/**
  	 * 
  	 * @param string $fileName
- 	 * @return string|boolean
+ 	 * @return string
  	 */
-	private function createFileName($fileName)
+	protected function createFileName($fileName): string
 	{
 	    
 	    if ($this->encryptName === true) {
@@ -400,10 +274,6 @@ class Uploader {
 	        }
 	    }
 	    
-	    if ($newFileName === '') {
-	        return false;
-	    }
-	    
 	    return $newFileName;
 	}
 	
@@ -415,10 +285,10 @@ class Uploader {
 	 *
 	 * @return boolean
 	 */
-	private function validateUploadPath()
+	protected function validateUploadPath(): bool
 	{
 	    if ($this->uploadPath === '') {
-	        $this->setError('upload_no_filepath');
+	        $this->setError('upload.noFilepath');
 	        return false;
 	    }
 	    
@@ -450,7 +320,7 @@ class Uploader {
 	 * @param boolean $ignore_mime
 	 * @return boolean
 	 */
-	private function isAllowedFileType()
+	protected function isAllowedFileType(): bool
 	{
 	    if (empty($this->allowedTypes)) {
 	        return true;
@@ -473,7 +343,7 @@ class Uploader {
 	 *
 	 * @return boolean
 	 */
-	private function isAllowedFilesize()
+	protected function isAllowedFilesize(): bool
 	{
 	    return $this->maxSize === 0 || $this->maxSize > $this->fileSize;
 	}
@@ -483,7 +353,7 @@ class Uploader {
 	 *
 	 * @return boolean
 	 */
-	private function isImage()
+	protected function isImage(): bool
 	{
 	    return in_array($this->fileType, $this->imgMimes, true);
 	}
@@ -493,7 +363,7 @@ class Uploader {
 	 *
 	 * @return boolean
 	 */
-	private function isAllowedDimensions()
+	protected function isAllowedDimensions(): bool
 	{
 	    if (!$this->isImage()) {
 	        return true;
@@ -530,7 +400,7 @@ class Uploader {
 	 * @param	string	$path
 	 * @return	array
 	 */
-	private function getImageProperties($path = '')
+	protected function getImageProperties($path = ''): array
 	{
 	    $image = [];
 	    if ($this->isImage() && function_exists('getimagesize')) {
@@ -553,9 +423,9 @@ class Uploader {
      * I'm not sure that it won't negatively affect certain files in unexpected ways,
      * but so far I haven't found that it causes trouble.
      *
-     * @return	string
+     * @return string|boolean
      */
-    private function doXssClean()
+    protected function doXssClean()
     {
         $file = $this->fileTemp;
         
@@ -617,20 +487,21 @@ class Uploader {
         return SecurityHelper::xssClean($data, true);
     }
     
-    /**
-     * 
-     * @param string $error
-     */
-    public function setError($error)
+	/**
+	 *
+	 * @param string $error
+	 * @return void
+	 */
+    public function setError(string $error): void
     {
         $this->errors[] = $error;
     }
     
     /**
      * @param int $index
-     * @return array
+     * @return string
      */
-    public function getError($index)
+    public function getError(int $index): string
     {
         return isset($this->errors[$index]) ? $this->errors[$index] : '';
     }
@@ -639,7 +510,7 @@ class Uploader {
      * 
      * @return array
      */
-    public function getErrors()
+    public function getErrors(): array
     {
         return $this->errors;
     }
