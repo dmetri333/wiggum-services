@@ -255,26 +255,30 @@ abstract class UploadAdapter {
  	 */
 	protected function createFileName($fileName): string
 	{
-	    
-	    if ($this->encryptName === true) {
-	        $fileName = md5(uniqid(mt_rand())).'.'.$this->fileExt;
-	    }
-	    
-	    if ($this->overwrite === true || !file_exists($this->uploadPath.$fileName)) {
-	        return $fileName;
-	    }
-	    
-	    $fileName = str_replace('.'.$this->fileExt, '', $fileName);
-	    
-	    $newFileName = '';
-	    for ($i = 1; $i < $this->maxFilenameIncrement; $i++) {
-	        if (!file_exists($this->uploadPath.$fileName.$i.'.'.$this->fileExt)) {
-	            $newFileName = $fileName.$i.'.'.$this->fileExt;
-	            break;
-	        }
-	    }
-	    
-	    return $newFileName;
+		
+		if ($this->encryptName === true) {
+			$fileName = md5(uniqid(mt_rand())).'.'.$this->fileExt;
+		}
+		
+		if ($this->overwrite === true) {
+			return $fileName;
+		}
+
+		if (!file_exists($this->uploadPath.$fileName)) {
+			return $fileName;
+		}
+		
+		$fileName = str_replace('.'.$this->fileExt, '', $fileName);
+		
+		$newFileName = '';
+		for ($i = 1; $i < $this->maxFilenameIncrement; $i++) {
+			if (!file_exists($this->uploadPath.$fileName.$i.'.'.$this->fileExt)) {
+				$newFileName = $fileName.$i.'.'.$this->fileExt;
+				break;
+			}
+		}
+		
+		return $newFileName;
 	}
 	
 	
