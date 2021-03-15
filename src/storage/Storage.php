@@ -37,7 +37,7 @@ class Storage {
             throw new StorageNotFoundException('Storage Adapter Not Found: ' . $this->disks[$disk]['adapter']); 
         }
 
-        $filesystemAdapter = $adapter($this->app);
+        $filesystemAdapter = new $adapter($this->app);
         $this->filesystem = $filesystemAdapter->getFilesystem($this->disks[$disk]);
 
         return $this;
