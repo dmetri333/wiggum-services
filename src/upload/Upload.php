@@ -12,10 +12,10 @@ class Upload {
 	 *
 	 * @param Application $app
 	 */
-	public function __construct(Application $app = null)
+	public function __construct(Application $app = null, array $config = [])
 	{
 		$this->app = $app;
-		$this->config = isset($app) ? $this->app->config->get('services.upload') : [ 'adapter' => 'wiggum\services\upload\adapter\LocalAdapter' ];
+		$this->config = !empty($config) ? $config : [ 'adapter' => 'wiggum\services\upload\adapters\LocalAdapter' ];
 	}
 	
 	/**

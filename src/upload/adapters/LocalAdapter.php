@@ -1,5 +1,5 @@
 <?php
-namespace wiggum\services\upload\adapter;
+namespace wiggum\services\upload\adapters;
 
 use app\services\upload\UploadAdapter;
 use wiggum\commons\helpers\FileHelper;

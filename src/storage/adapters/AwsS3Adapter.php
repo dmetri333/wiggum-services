@@ -1,5 +1,5 @@
 <?php
-namespace wiggum\services\storage\adapter;
+namespace wiggum\services\storage\adapters;
 
 use \wiggum\services\storage\StorageAdapter;
 use \League\Flysystem\Filesystem;
