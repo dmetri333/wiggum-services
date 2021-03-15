@@ -1,7 +1,7 @@
 <?php
 namespace wiggum\services\upload\adapters;
 
-use app\services\upload\UploadAdapter;
+use wiggum\services\upload\UploadAdapter;
 use wiggum\commons\helpers\FileHelper;
 use wiggum\commons\helpers\SecurityHelper;
 

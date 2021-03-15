@@ -7,7 +7,7 @@ use wiggum\commons\helpers\SecurityHelper;
 
 abstract class UploadAdapter {
 	
-	private $app;
+	protected $app;
 
     protected $errors     = [];
     protected $imgMimes   = ['image/gif', 'image/jpeg', 'image/png'];

@@ -1,7 +1,7 @@
 <?php
 namespace wiggum\services\upload\adapters;
 
-use app\services\upload\UploadAdapter;
+use wiggum\services\upload\UploadAdapter;
 use wiggum\commons\helpers\FileHelper;
 use wiggum\commons\helpers\SecurityHelper;
 
@@ -145,7 +145,7 @@ class AwsS3Adapter extends UploadAdapter {
 		try {
 			$stream = fopen($this->fileTemp, 'r+');
 
-			$this->app->filesystem->writeStream($this->uploadPath.$this->fileName, $stream);
+			$this->app->storage->disk('s3')->writeStream($this->uploadPath.$this->fileName, $stream);
 		} catch (\League\Flysystem\FilesystemException $exception) {
 			$this->setError('upload.destinationError');
 			return false;
@@ -172,7 +172,7 @@ class AwsS3Adapter extends UploadAdapter {
 
 		$files = [];
 		try {
-			$listing = $this->app->filesystem->listContents($this->uploadPath);
+			$listing = $this->app->storage->disk('s3')->listContents($this->uploadPath);
 			
 			/** @var \League\Flysystem\StorageAttributes $item */
 			foreach ($listing as $item) {
