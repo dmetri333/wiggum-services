@@ -15,17 +15,7 @@ class AwsS3Adapter extends StorageAdapter {
      */
     public function getFilesystem(array $config): Filesystem
     {
-        $options = [
-            'endpoint' => $config['endpoint'],
-            'region' => $config['region'],
-            'credentials' => [
-                'key' => $config['key'],
-                'secret' => $config['secret']
-            ],
-            'version' => $config['version']
-        ];
-
-        $client = new S3Client($options);
+        $client = new S3Client($config);
 
         // The internal adapter
         $adapter = new AwsS3V3Adapter(
