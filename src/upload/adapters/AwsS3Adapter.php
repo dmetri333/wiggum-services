@@ -213,7 +213,7 @@ class AwsS3Adapter extends UploadAdapter {
 
 		$fileName = str_replace('.'.$this->fileExt, '', $fileName);
 		if (!in_array($fileName, $files)) {
-	        return $fileName;
+	        return $fileName.'.'.$this->fileExt;
 	    }
 		
 		$newFileName = '';
