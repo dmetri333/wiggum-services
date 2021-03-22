@@ -26,7 +26,7 @@ class AwsS3Adapter extends StorageAdapter {
         );
 
         // The FilesystemOperator
-        return new Filesystem($adapter);
+        return new Filesystem($adapter, ['visibility' => $config['visibility']]);
     }
 
 }
