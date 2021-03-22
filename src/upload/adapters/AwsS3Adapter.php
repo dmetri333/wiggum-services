@@ -142,6 +142,10 @@ class AwsS3Adapter extends UploadAdapter {
 		   return false;
 	   }
 
+	   if ($this->isImage() && function_exists('getimagesize')) {
+		$this->imageSizeData = @getimagesize($this->fileTemp);
+	   }
+	   
 		try {
 			$stream = fopen($this->fileTemp, 'r+');
 
@@ -154,6 +158,28 @@ class AwsS3Adapter extends UploadAdapter {
 		return true;
     }
 
+	/**
+	 * Set Image Properties
+	 *
+	 * Uses GD to determine the width/height/type of image
+	 *
+	 * @param	string	$path
+	 * @return	array
+	 */
+	protected function getImageProperties($path = ''): array
+	{
+	    $image = [];
+		if (false !== $this->imageSizeData) {
+			$types = [1 => 'gif', 2 => 'jpeg', 3 => 'png'];
+	
+			$image['width'] = $this->imageSizeData[0];
+			$image['height'] = $this->imageSizeData[1];
+			$image['type']	= isset($types[$this->imageSizeData[2]]) ? $types[$this->imageSizeData[2]] : 'unknown';
+		}
+	    
+	    return $image;
+	}
+	
 	/**
  	 * 
  	 * @param string $fileName
