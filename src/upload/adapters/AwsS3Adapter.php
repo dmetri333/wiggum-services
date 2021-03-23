@@ -7,7 +7,9 @@ use wiggum\commons\helpers\SecurityHelper;
 
 class AwsS3Adapter extends UploadAdapter {
 
-    /**
+	protected $imageSizeData = false;
+	
+    	/**
 	 *
 	 * @param string $uploadPath
 	 * @param boolean $createDir
@@ -27,7 +29,7 @@ class AwsS3Adapter extends UploadAdapter {
 	 * @param array $file
 	 * @return boolean
 	 */
-    public function upload(array $file): bool
+    	public function upload(array $file): bool
 	{
 
         if (!isset($file)) {
@@ -153,6 +155,9 @@ class AwsS3Adapter extends UploadAdapter {
 		} catch (\League\Flysystem\FilesystemException $exception) {
 			$this->setError('upload.destinationError');
 			return false;
+		} catch (\Exception $exception) {
+			$this->setError('upload.destinationError');
+			return false;
 		}
 		
 		return true;
@@ -208,6 +213,8 @@ class AwsS3Adapter extends UploadAdapter {
 			}
 			
 		} catch (\League\Flysystem\FilesystemException $exception) {
+			return '';
+		} catch (\Exception $exception) {
 			return '';
 		}
 
