@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3b40e143250c8c722a985302321268a8",
+    "content-hash": "3517ba4dce906cbe65e54eb512442cee",
     "packages": [
         {
             "name": "guzzlehttp/psr7",
@@ -149,16 +149,16 @@
         },
         {
             "name": "league/flysystem",
-            "version": "2.0.4",
+            "version": "2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/flysystem.git",
-                "reference": "7cbbb7222e8d8a34e71273d243dfcf383ed6779f"
+                "reference": "a3c694de9f7e844b76f9d1b61296ebf6e8d89d74"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/7cbbb7222e8d8a34e71273d243dfcf383ed6779f",
-                "reference": "7cbbb7222e8d8a34e71273d243dfcf383ed6779f",
+                "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/a3c694de9f7e844b76f9d1b61296ebf6e8d89d74",
+                "reference": "a3c694de9f7e844b76f9d1b61296ebf6e8d89d74",
                 "shasum": ""
             },
             "require": {
@@ -179,7 +179,8 @@
                 "google/cloud-storage": "^1.23",
                 "phpseclib/phpseclib": "^2.0",
                 "phpstan/phpstan": "^0.12.26",
-                "phpunit/phpunit": "^8.5 || ^9.4"
+                "phpunit/phpunit": "^8.5 || ^9.4",
+                "sabre/dav": "^4.1"
             },
             "type": "library",
             "autoload": {
@@ -211,7 +212,25 @@
                 "sftp",
                 "storage"
             ],
-            "time": "2021-02-12T19:37:50+00:00"
+            "support": {
+                "issues": "https://github.com/thephpleague/flysystem/issues",
+                "source": "https://github.com/thephpleague/flysystem/tree/2.1.1"
+            },
+            "funding": [
+                {
+                    "url": "https://offset.earth/frankdejonge",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/frankdejonge",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/league/flysystem",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2021-06-23T22:07:10+00:00"
         },
         {
             "name": "league/mime-type-detection",
@@ -253,6 +272,20 @@
                 }
             ],
             "description": "Mime-type detection for Flysystem",
+            "support": {
+                "issues": "https://github.com/thephpleague/mime-type-detection/issues",
+                "source": "https://github.com/thephpleague/mime-type-detection/tree/1.7.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/frankdejonge",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/league/flysystem",
+                    "type": "tidelift"
+                }
+            ],
             "time": "2021-01-18T20:58:21+00:00"
         },
         {
@@ -350,6 +383,56 @@
                 "response"
             ],
             "time": "2016-08-06T14:39:51+00:00"
+        },
+        {
+            "name": "psr/log",
+            "version": "1.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/log.git",
+                "reference": "d49695b909c3b7628b6289db5479a1c204601f11"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/d49695b909c3b7628b6289db5479a1c204601f11",
+                "reference": "d49695b909c3b7628b6289db5479a1c204601f11",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Log\\": "Psr/Log/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for logging libraries",
+            "homepage": "https://github.com/php-fig/log",
+            "keywords": [
+                "log",
+                "psr",
+                "psr-3"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/log/tree/1.1.4"
+            },
+            "time": "2021-05-03T11:20:27+00:00"
         },
         {
             "name": "ralouphie/getallheaders",
@@ -1918,5 +2001,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "2.1.0"
 }
