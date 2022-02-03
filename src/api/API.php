@@ -16,7 +16,7 @@ class API {
 	 * @param string $message
 	 * @return Response
 	 */
-	public function packageResponse(Response $response, $payload = [], int $code = StatusCodeHelper::HTTP_STATUS_OK, string $message = ''): Response
+	public function packageResponse(Response $response, $payload = [], int $code = StatusCodeHelper::HTTP_OK, string $message = ''): Response
 	{
 	    $message = $this->determineMessage($code, $message);
 		$error = $code >= 200 && $code < 300  ? false : true;
