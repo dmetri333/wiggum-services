@@ -27,9 +27,11 @@ class API {
 	        'processTime' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
 	    ];
 	    
-	    $response->withStatus($code, $message);
+            if ($code >= 100 && $code <= 599)
+                $response->withStatus($code, $message);	    
+            
 	    $response->setContentType('application/json');
-		$response->addHeader('Access-Control-Allow-Origin', '*');
+	    $response->addHeader('Access-Control-Allow-Origin', '*');
 	    $response->setOutput(json_encode($output, JSON_NUMERIC_CHECK));
 	    return $response;
 	}
