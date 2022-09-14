@@ -61,7 +61,11 @@ class DB {
 	public function connect($protocol, $user, $password, $url, $name, $port = 3306, $characterSet = 'utf8') {
 		$pdo = null;
 		try {
-			$options = [PDO::ATTR_PERSISTENT => true];
+			$options = [
+				PDO::ATTR_PERSISTENT => true,
+				PDO::ATTR_EMULATE_PREPARES => false,
+				PDO::ATTR_STRINGIFY_FETCHES => false
+			];
 			$pdo = new PDO("{$protocol}:host={$url};port={$port};dbname={$name}", $user, $password, $options);
 			$pdo->exec('SET NAMES '.$characterSet);
 		} catch (PDOException $e) {
