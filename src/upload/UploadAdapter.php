@@ -196,6 +196,13 @@ abstract class UploadAdapter {
 	 */
 	public abstract function upload(array $file): bool;
 
+	/**
+	 * 
+	 * @param array $file
+	 * @return boolean
+	 */
+	public abstract function check(array $file): bool;
+
  	/**
  	 * Finalized Data Array
  	 *
@@ -517,6 +524,15 @@ abstract class UploadAdapter {
     public function getErrors(): array
     {
         return $this->errors;
+    }
+
+	/**
+     * 
+	 * @return void
+     */
+    public function clearErrors(): void
+    {
+        $this->errors = [];
     }
 
 }

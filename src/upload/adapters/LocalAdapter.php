@@ -15,6 +15,35 @@ class LocalAdapter extends UploadAdapter {
 	public function upload(array $file): bool
 	{
  	   
+		if (!$this->check($file)) {
+			return false;
+		}
+	    
+	    /*
+	     * Move the file to the final destination
+	     * To deal with different server configurations
+	     * we'll attempt to use copy() first. If that fails
+	     * we'll use move_uploaded_file(). One of the two should
+	     * reliably work in most environments
+	     */
+	    if (!@copy($this->fileTemp, $this->uploadPath.$this->fileName)) {
+	        if (!@move_uploaded_file($this->fileTemp, $this->uploadPath.$this->fileName)) {
+	            $this->setError('upload.destinationError');
+	            return false;
+	        }
+	    }
+	   
+	    return true;
+ 	}
+
+	/**
+	 * 
+	 * @param array $file
+	 * @return boolean
+	 */
+	public function check(array $file): bool
+	{
+ 	   
 	    if (!isset($file)) {
 	        $this->setError('upload.noFileSelected');
 	        return false;
@@ -136,20 +165,6 @@ class LocalAdapter extends UploadAdapter {
 	        return false;
 	    }
 	    
-	    /*
-	     * Move the file to the final destination
-	     * To deal with different server configurations
-	     * we'll attempt to use copy() first. If that fails
-	     * we'll use move_uploaded_file(). One of the two should
-	     * reliably work in most environments
-	     */
-	    if (!@copy($this->fileTemp, $this->uploadPath.$this->fileName)) {
-	        if (!@move_uploaded_file($this->fileTemp, $this->uploadPath.$this->fileName)) {
-	            $this->setError('upload.destinationError');
-	            return false;
-	        }
-	    }
-	   
 	    return true;
  	}
 

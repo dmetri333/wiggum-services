@@ -29,7 +29,34 @@ class AwsS3Adapter extends UploadAdapter {
 	 * @param array $file
 	 * @return boolean
 	 */
-    	public function upload(array $file): bool
+    public function upload(array $file): bool
+	{
+
+		if (!$this->check($file)) {
+			return false;
+		}
+	   
+		try {
+			$stream = fopen($this->fileTemp, 'r+');
+
+			$this->app->storage->disk('s3')->writeStream($this->uploadPath.$this->fileName, $stream);
+		} catch (\League\Flysystem\FilesystemException $exception) {
+			$this->setError('upload.destinationError');
+			return false;
+		} catch (\Exception $exception) {
+			$this->setError('upload.destinationError');
+			return false;
+		}
+		
+		return true;
+    }
+
+	/**
+	 * 
+	 * @param array $file
+	 * @return boolean
+	 */
+    public function check(array $file): bool
 	{
 
         if (!isset($file)) {
@@ -131,7 +158,7 @@ class AwsS3Adapter extends UploadAdapter {
 		if ($this->fileName === '') {
 		   $this->setError('upload.badFilename');
 		   return false;
-	   }
+	   	}
 	   
 	   /*
 		* Run the file through the XSS hacking filter
@@ -139,25 +166,13 @@ class AwsS3Adapter extends UploadAdapter {
 		* embedded within a file. Scripts can easily
 		* be disguised as images or other file types.
 		*/
-	   if ($this->xssClean && $this->doXssClean() === false) {
-		   $this->setError('upload.unableToWriteFile');
-		   return false;
-	   }
-
-	   if ($this->isImage() && function_exists('getimagesize')) {
-		$this->imageSizeData = @getimagesize($this->fileTemp);
-	   }
-	   
-		try {
-			$stream = fopen($this->fileTemp, 'r+');
-
-			$this->app->storage->disk('s3')->writeStream($this->uploadPath.$this->fileName, $stream);
-		} catch (\League\Flysystem\FilesystemException $exception) {
-			$this->setError('upload.destinationError');
+		if ($this->xssClean && $this->doXssClean() === false) {
+			$this->setError('upload.unableToWriteFile');
 			return false;
-		} catch (\Exception $exception) {
-			$this->setError('upload.destinationError');
-			return false;
+		}
+
+		if ($this->isImage() && function_exists('getimagesize')) {
+			$this->imageSizeData = @getimagesize($this->fileTemp);
 		}
 		
 		return true;
