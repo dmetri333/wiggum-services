@@ -16,7 +16,8 @@ class Fetch {
 		'cookies' => [],
 		'headers' => [],
 		'data' => [],
-		'files' => []
+		'files' => [],
+		'body' => []
 	];
 
 	/**
@@ -79,6 +80,9 @@ class Fetch {
 			}
 
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		} else if ($options['method'] == 'POST' && !empty($options['body'])) {
+			curl_setopt($ch, CURLOPT_POST, true); 
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $options['body']);
 		} else if ($options['method'] == 'POST') {
 			curl_setopt($ch, CURLOPT_POST, true); 
 			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
