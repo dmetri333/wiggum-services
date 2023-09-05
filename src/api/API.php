@@ -32,6 +32,7 @@ class API {
             
 	    $response->setContentType('application/json');
 	    $response->addHeader('Access-Control-Allow-Origin', '*');
+            $response->addHeader('X-Wiggum-API', 'true');
 	    $response->setOutput(json_encode($output, JSON_NUMERIC_CHECK));
 	    return $response;
 	}
