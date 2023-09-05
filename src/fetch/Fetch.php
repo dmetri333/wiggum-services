@@ -105,6 +105,21 @@ class Fetch {
             curl_setopt($ch, CURLOPT_COOKIE, implode('; ', $options['cookies']));
         }
 
+        // get the response headers
+	$headers = [];
+	curl_setopt($ch, CURLOPT_HEADERFUNCTION,
+		function($curl, $header) use (&$headers) {
+			$len = strlen($header);
+			$header = explode(':', $header, 2);
+			if (count($header) < 2) // ignore invalid headers
+				return $len;
+
+			$headers[strtolower(trim($header[0]))][] = trim($header[1]);
+			
+			return $len;
+		}
+	);
+	    
         $curlResult = curl_exec($ch);
 
 		if ($options['debug']) {
@@ -125,6 +140,7 @@ class Fetch {
         if ($curlResult === false) {
             $result = (object) [
 				'payload' => false,
+		                'header' => $headers,
 				'status' => (object) ['error' => true, 'code' => $responseCode, 'message' => StatusCodeHelper::getReasonPhrase($responseCode)],
 				'processTime' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
 			];
