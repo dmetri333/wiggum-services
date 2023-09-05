@@ -139,12 +139,19 @@ class Fetch {
 
         if ($curlResult === false) {
             $result = (object) [
-				'payload' => false,
-		                'header' => $headers,
-				'status' => (object) ['error' => true, 'code' => $responseCode, 'message' => StatusCodeHelper::getReasonPhrase($responseCode)],
-				'processTime' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
-			];
-		}
+		'payload' => false,
+		'header' => $headers,
+		'status' => (object) ['error' => true, 'code' => $responseCode, 'message' => StatusCodeHelper::getReasonPhrase($responseCode)],
+		'processTime' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
+	    ];
+	} else if (!isset($header['x-wiggum-api])) {
+            $result = (object) [
+		'payload' => $result,
+		'header' => $headers,
+		'status' => (object) ['error' => true, 'code' => $responseCode, 'message' => StatusCodeHelper::getReasonPhrase($responseCode)],
+		'processTime' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
+	    ];
+	}
 
         curl_close($ch);
 
