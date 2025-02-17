@@ -51,7 +51,7 @@ class Logger extends AbstractLogger
      * @param array $context
      * @return null
      */
-    public function log($level, $message, array $context = [])
+    public function log($level, string|\Stringable $message, array $context = []) : void
     {
         if ($this->logLevels[$this->options['level']] < $this->logLevels[$level]) {
             return;
