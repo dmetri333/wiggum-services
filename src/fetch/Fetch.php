@@ -72,22 +72,25 @@ class Fetch {
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $options['sslVerifyPeer']);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, (int) $options['sslVerifyHost']);
 
-		if ($options['method'] == 'POST' && !empty($options['files'])) {
-			foreach ($options['files'] as $name => $file) {
-				if (!empty($file['tmp_name']) || !empty($file['type']) || !empty($file['name'])) {
-					$data[$name] = curl_file_create($file['tmp_name'], $file['type'], $file['name']);
-				}
-			}
+		// Set HTTP method
+        if ($options['method'] == 'POST') {
+            curl_setopt($ch, CURLOPT_POST, true);
+        } else if ($options['method'] != 'GET') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $options['method']);
+        }
 
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-		} else if ($options['method'] == 'POST' && !empty($options['body'])) {
-			curl_setopt($ch, CURLOPT_POST, true); 
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $options['body']);
-		} else if ($options['method'] == 'POST') {
-			curl_setopt($ch, CURLOPT_POST, true); 
-			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-		} else if ($options['method'] != 'GET') {
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $options['method']);  // for other types of requests including DELETE
+        // Set POST fields/body
+        if ($options['method'] == 'POST' && !empty($options['files'])) {
+            foreach ($options['files'] as $name => $file) {
+                if (!empty($file['tmp_name']) || !empty($file['type']) || !empty($file['name'])) {
+                    $data[$name] = curl_file_create($file['tmp_name'], $file['type'], $file['name']);
+                }
+            }
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        } else if (!empty($options['body'])) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $options['body']);
+        } else if ($options['method'] == 'POST') {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         }
 
         if ($options['async']) { // for async request wait as little as possible before exiting
