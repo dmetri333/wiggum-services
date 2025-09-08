@@ -14,9 +14,11 @@ class AwsS3Adapter extends UploadAdapter {
 	 * 
 	 * @param string $disk
 	 */
-	public function setDisk(string $disk) 
+	public function disk(string $disk) 
 	{
 		$this->disk = $disk;
+
+		return $this;
 	}
     
 	/**
