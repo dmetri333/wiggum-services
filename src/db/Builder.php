@@ -974,9 +974,9 @@ class Builder {
 	 * @return array
 	 */
 	public function getColumnListing() {
-		$sql = $this->grammar->compileColumnExists();
+		$compiled = $this->grammar->compileColumnListing($this->from[0]);
 		
-		return $this->db->fetchRows($sql, [$this->from[0]], PDO::FETCH_COLUMN);
+		return $this->db->fetchRows($compiled['sql'], $compiled['bindings'], PDO::FETCH_COLUMN);
 	}
 	
 	/**

@@ -4,12 +4,14 @@ namespace wiggum\services\db;
 use \PDO;
 use \PDOException;
 use \wiggum\services\db\grammers\MySqlGrammar;
+use \wiggum\services\db\grammers\SqliteGrammar;
 
 class DB {
 	
 	private $pdo;
 	private $transactionError = false;
 	private $prefix = '';
+	private $protocol = 'mysql';
 	
 	/**
 	 * 
@@ -18,12 +20,13 @@ class DB {
 	public function __construct($config) {
 	    
 	    if (!empty($config)) {
+			$this->protocol = isset($config['protocol']) ? strtolower($config['protocol']) : 'mysql';
 			$this->prefix = isset($config['prefix']) ? $config['prefix'] : '';
 
 	        $port = isset($config['port']) ? $config['port'] : '3306';
 	        $characterSet = isset($config['characterSet']) ? $config['characterSet'] : 'utf8';
 	        
-	        $this->connect($config['protocol'], $config['username'], $config['password'], $config['url'], $config['name'], $port, $characterSet);
+	        $this->connect($this->protocol, $config['username'] ?? null, $config['password'] ?? null, $config['url'] ?? null, $config['name'] ?? null, $port, $characterSet);
 	    }
 	}
 	
@@ -41,9 +44,23 @@ class DB {
 	 * @return \wiggum\services\db\Builder
 	 */
 	public function table($table) {
-		$query = new Builder($this, new MySqlGrammar());
+		$query = new Builder($this, $this->createGrammar());
 		
 		return $query->from($this->prefix.$table);
+	}
+	
+	/**
+	 * @return \wiggum\services\db\Grammar
+	 */
+	protected function createGrammar() {
+		switch ($this->protocol) {
+			case 'sqlite':
+			case 'sqlite3':
+				return new SqliteGrammar();
+			case 'mysql':
+			default:
+				return new MySqlGrammar();
+		}
 	}
 	
 	/**
@@ -66,8 +83,15 @@ class DB {
 				PDO::ATTR_EMULATE_PREPARES => false,
 				PDO::ATTR_STRINGIFY_FETCHES => false
 			];
-			$pdo = new PDO("{$protocol}:host={$url};port={$port};dbname={$name}", $user, $password, $options);
-			$pdo->exec('SET NAMES '.$characterSet);
+			$protocol = strtolower((string) $protocol);
+
+			if ($protocol === 'sqlite' || $protocol === 'sqlite3') {
+				$dbPath = (is_string($url) && $url !== '') ? $url : ':memory:';
+				$pdo = new PDO("sqlite:{$dbPath}", null, null, $options);
+			} else {
+				$pdo = new PDO("{$protocol}:host={$url};port={$port};dbname={$name}", $user, $password, $options);
+				$pdo->exec('SET NAMES '.$characterSet);
+			}
 		} catch (PDOException $e) {
 			$pdo = null;
 			

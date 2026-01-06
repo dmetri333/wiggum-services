@@ -181,4 +181,32 @@ class Grammar {
 	    return '\'$."'.str_replace($delimiter, '"."', $value).'"\'';
 	}
 	
+	/**
+	 * Build a "column listing" query for a given table.
+	 *
+	 * Returns an array with:
+	 *  - sql: string
+	 *  - bindings: array
+	 *
+	 * @param string $table
+	 * @return array{sql: string, bindings: array}
+	 */
+	public function compileColumnListing(string $table): array
+	{
+		return [
+			'sql' => $this->compileColumnExists(),
+			'bindings' => [$table],
+		];
+	}
+	
+	/**
+	 * Compile the query to determine the list of columns.
+	 *
+	 * @return string
+	 */
+	public function compileColumnExists()
+	{
+		throw new \RuntimeException('This database engine does not support column listing.');
+	}
+	
 }
