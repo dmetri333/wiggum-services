@@ -8,8 +8,20 @@ use wiggum\commons\helpers\SecurityHelper;
 class AwsS3Adapter extends UploadAdapter {
 
 	protected $imageSizeData = false;
+	protected $disk = 's3';
 	
-    	/**
+	/**
+	 * 
+	 * @param string $disk
+	 */
+	public function disk(string $disk) 
+	{
+		$this->disk = $disk;
+
+		return $this;
+	}
+    
+	/**
 	 *
 	 * @param string $uploadPath
 	 * @param boolean $createDir
@@ -39,7 +51,7 @@ class AwsS3Adapter extends UploadAdapter {
 		try {
 			$stream = fopen($this->fileTemp, 'r+');
 
-			$this->app->storage->disk('s3')->writeStream($this->uploadPath.$this->fileName, $stream);
+			$this->app->storage->disk($this->disk)->writeStream($this->uploadPath.$this->fileName, $stream);
 		} catch (\League\Flysystem\FilesystemException $exception) {
 			$this->setError('upload.destinationError');
 			return false;
