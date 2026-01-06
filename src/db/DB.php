@@ -1,41 +1,32 @@
 <?php
 namespace wiggum\services\db;
 
-use \PDO;
-use \PDOException;
-use \wiggum\services\db\grammers\MySqlGrammar;
-use \wiggum\services\db\grammers\SqliteGrammar;
-
 class DB {
 	
-	private $pdo;
-	private $transactionError = false;
-	private $prefix = '';
-	private $protocol = 'mysql';
+	private $connection = null;
 	
 	/**
 	 * 
 	 * @param array $config
 	 */
-	public function __construct($config) {
-	    
+	public function __construct($config) 
+	{
 	    if (!empty($config)) {
-			$this->protocol = isset($config['protocol']) ? strtolower($config['protocol']) : 'mysql';
-			$this->prefix = isset($config['prefix']) ? $config['prefix'] : '';
 
-	        $port = isset($config['port']) ? $config['port'] : '3306';
-	        $characterSet = isset($config['characterSet']) ? $config['characterSet'] : 'utf8';
-	        
-	        $this->connect($this->protocol, $config['username'] ?? null, $config['password'] ?? null, $config['url'] ?? null, $config['name'] ?? null, $port, $characterSet);
+			$connectType = isset($config['connection']) ? $config['connection'] : '\wiggum\services\db\connections\MySql';
+
+			$this->connection = new $connectType();
+	        $this->connection->connect($config);
 	    }
 	}
 	
 	/**
 	 * 
-	 * @return Ambigous <NULL, \PDO>
+	 * @return Ambigous
 	 */
-	public function getPDO() {
-		return $this->pdo;
+	public function getConnection() 
+	{
+		return $this->connection->getConnection();
 	}
 	
 	/**
@@ -43,112 +34,40 @@ class DB {
 	 * @param string $table
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function table($table) {
-		$query = new Builder($this, $this->createGrammar());
+	public function table($table) 
+	{
+		$query = new Builder($this, $this->connection->getGrammar());
 		
-		return $query->from($this->prefix.$table);
-	}
-	
-	/**
-	 * @return \wiggum\services\db\Grammar
-	 */
-	protected function createGrammar() {
-		switch ($this->protocol) {
-			case 'sqlite':
-			case 'sqlite3':
-				return new SqliteGrammar();
-			case 'mysql':
-			default:
-				return new MySqlGrammar();
-		}
-	}
-	
-	/**
-	 *
-	 * @param string $protocol
-	 * @param string $user
-	 * @param string $password
-	 * @param string $url
-	 * @param string $name
-	 * @param string $port [3306]
-	 * @param string $characterSet ['utf8']
-	 * 
-	 * @return /PDO
-	 */
-	public function connect($protocol, $user, $password, $url, $name, $port = 3306, $characterSet = 'utf8') {
-		$pdo = null;
-		try {
-			$options = [
-				PDO::ATTR_PERSISTENT => true,
-				PDO::ATTR_EMULATE_PREPARES => false,
-				PDO::ATTR_STRINGIFY_FETCHES => false
-			];
-			$protocol = strtolower((string) $protocol);
-
-			if ($protocol === 'sqlite' || $protocol === 'sqlite3') {
-				$dbPath = (is_string($url) && $url !== '') ? $url : ':memory:';
-				$pdo = new PDO("sqlite:{$dbPath}", null, null, $options);
-			} else {
-				$pdo = new PDO("{$protocol}:host={$url};port={$port};dbname={$name}", $user, $password, $options);
-				$pdo->exec('SET NAMES '.$characterSet);
-			}
-		} catch (PDOException $e) {
-			$pdo = null;
-			
-			throw new \wiggum\exceptions\InternalErrorException('Database failed to connect');
-		}
-		$this->pdo = $pdo;
+		return $query->from($this->connection->getPrefix().$table);
 	}
 	
 	/**
 	 * 
 	 * @return boolean
 	 */
-	public function beginTransaction() {
-		try {
-			$this->pdo->beginTransaction();
-			return true;
-		} catch (PDOException $e) {
-			error_log($e->getMessage());
-		}
-		return false;
+	public function beginTransaction() 
+	{
+		return $this->connection->beginTransaction();
 	}
-	
 	
 	/**
 	 * 
 	 * @return boolean
 	 */
-	public function doRollBack() {
-		try {
-			$this->pdo->rollBack();
-			return true;
-		} catch (PDOException $e) {
-			error_log($e->getMessage());
-		}
-		return false;
+	public function doRollBack()
+	{
+		return $this->connection->doRollBack();
 	}
 	
 	/**
 	 * 
 	 * @param boolean $selfRollBack [default=false]
+	 * 
 	 * @return boolean
 	 */
-	public function doCommit($selfRollBack = false) {
-		try {
-			if ($selfRollBack) {
-				if ($this->transactionError) {
-					$this->doRollBack();
-					return false;
-				}
-			}
-			
-			$this->pdo->commit();
-			return true;
-		} catch (PDOException $e) {
-			error_log($e->getMessage());
-		}
-		return false;
+	public function doCommit($selfRollBack = false) 
+	{
+		return $this->connection->doCommit($selfRollBack);
 	}
 	
 	
@@ -158,34 +77,12 @@ class DB {
 	 * @param string $query
 	 * @param array $values
 	 * @param object $instance - the initialized object that the fields should be set in
-	 * @param array $callback [default=array()]
+	 * 
 	 * @return object
 	 */
-	public function fetchObject($query, array $values, $instance, $fetchMode = PDO::FETCH_INTO) {
-		$obj = null;
-		try {
-			$statement = $this->pdo->prepare($query);
-			$statement->setFetchMode($fetchMode, $instance);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
-
-			if ($statement->execute()) {
-				$obj = $statement->fetch($fetchMode);
-				if (!$obj) return null;
-			} else {
-				$errorInfo = $statement->errorInfo();
-				error_log($errorInfo[2]);
-			}
-		} catch (PDOException $e) {
-			error_log($e->getMessage());
-		}
-		return $obj;
+	public function fetchObject(string $query, array $values, $instance) 
+	{
+		return $this->connection->fetchObject($query, $values, $instance);
 	}
 	
 	/**
@@ -195,175 +92,100 @@ class DB {
 	 * @param string $query
 	 * @param array $values
 	 * @param object $instance - the initialized object that the fields should be set in
-	 * @param array $callback [default=array()]
+	 * 
 	 * @return array
 	 */
-	public function fetchObjects($query, array $values, $instance, $fetchMode = PDO::FETCH_INTO) {
-
-		$objects = array();
-		try {
-			$statement = $this->pdo->prepare($query);
-			$statement->setFetchMode($fetchMode, $instance);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
-
-			if ($statement->execute()) {
-				while (($obj = $statement->fetch($fetchMode))) {
-					if (isset($obj))
-						$objects[] = clone $obj;
-				}
-			} else {
-				$errorInfo = $statement->errorInfo();
-				error_log($errorInfo[2]);
-			}
-		} catch (PDOException $e) {
-			error_log($e->getMessage());
-		}
-		return $objects;
-	
+	public function fetchObjects(string $query, array $values, $instance) 
+	{
+		return $this->connection->fetchObjects($query, $values, $instance);
 	}
 	
 	/**
 	 *
 	 * @param string $query
 	 * @param array $values
-	 * @param int $fetchMode [default=PDO::FETCH_ASSOC]
+	 * @param bool $assoc
+	 * 
 	 * @return array|object
 	 */
-	public function fetchRow($query, array $values, $fetchMode = PDO::FETCH_ASSOC) {
-		$row = null;
-		try {
-			$statement = $this->pdo->prepare($query);
-			
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
-
-			if ($statement->execute()) {
-				$row = $statement->fetch($fetchMode);
-				if ($row === false) $row = null;
-			} else {
-				$errorInfo = $statement->errorInfo();
-				error_log($errorInfo[2]);
-			}
-		} catch (PDOException $e) {
-			error_log($e->getMessage());
-		}
-		return $row;
+	public function fetchRow(string $query, array $values, bool $assoc = false) 
+	{
+		return $this->connection->fetchRow($query, $values, $assoc);
 	}
 	
 	/**
 	 *
 	 * @param string $query
 	 * @param array $values
-	 * @param int $fetchMode [default=PDO::FETCH_ASSOC]
+	 * @param bool $assoc
+	 * 
 	 * @return array
 	 */
-	public function fetchRows($query, array $values, $fetchMode = PDO::FETCH_ASSOC) {
-		$rows = array();
-		try {
-			$statement = $this->pdo->prepare($query);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
-
-			if ($statement->execute()) {
-				$rows = $statement->fetchAll($fetchMode);
-			} else {
-				$errorInfo = $statement->errorInfo();
-				error_log($errorInfo[2]);
-			}
-		} catch (PDOException $e) {
-			error_log($e->getMessage());
-		}
-		return $rows;
+	public function fetchRows(string $query, array $values, bool $assoc = false) 
+	{
+		return $this->connection->fetchRows($query, $values, $assoc);
 	}
 	
-	
+	/**
+	 * 
+	 * @param string $query
+	 * @param array $values
+	 *
+	 * @return array
+	 */
+	public function fetchAllColumn(string $query, array $values) {
+		return $this->connection->fetchAllColumn($query, $values);
+	}
+
 	/**
 	 * Retrieve first column in results set
 	 *
 	 * @param string $query
 	 * @param array $values
+	 * 
 	 * @return string
 	 */
-	public function fetchColumn($query, array $values) {
-		$col = null;
-		try {
-			$statement = $this->pdo->prepare($query);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
-
-			if ($statement->execute()) {
-				$col = $statement->fetchColumn();
-				if (!$col) return null;
-			} else {
-				$errorInfo = $statement->errorInfo();
-				error_log($errorInfo[2]);
-			}
-		} catch (PDOException $e) {
-			error_log($e->getMessage());
-		}
-		return $col;
+	public function fetchColumn(string $query, array $values) 
+	{
+		return $this->connection->fetchColumn($query, $values);
 	}
 	
 	/**
 	 *
 	 * @param string $query
 	 * @param array $values
-	 * @param boolean $lastInsId [default=true]
+	 * @param bool $assoc
+	 * 
+	 * @return array
+	 */
+	public function fetchRowsWithColumnKey(string $query, array $values, bool $assoc = false) 
+	{
+		return $this->connection->fetchRowsWithColumnKey($query, $values);
+	}
+
+	/**
+	 *
+	 * @param string $query
+	 * @param array $values
+	 * 
+	 * @return array
+	 */
+	public function fetchKeyValuePair(string $query, array $values) 
+	{
+		return $this->connection->fetchKeyValuePair($query, $values);
+	}
+	
+	/**
+	 *
+	 * @param string $query
+	 * @param array $values
+	 * @param bool $lastInsId [default=true]
+	 * 
 	 * @return int | boolean
 	 */
-	public function executeQuery($query, array $values, $lastInsId = true) {
-		$result = false;
-		try {
-			$statement = $this->pdo->prepare($query);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
-			
-			if ($statement->execute()) {
-				if ($lastInsId) {
-					$result = $this->pdo->lastInsertId();
-				} else {
-					$result = true;
-				}
-			} else {
-				$this->transactionError = true;
-				$errorInfo = $statement->errorInfo();
-				error_log($errorInfo[2]);
-			}
-		} catch (PDOException $e) {
-			$this->transactionError = true;
-			error_log($e->getMessage());
-		}
-		return $result;
+	public function executeQuery(string $query, array $values, bool $lastInsId = true) 
+	{
+		return $this->connection->executeQuery($query, $values, $lastInsId);
 	}
 	
 	

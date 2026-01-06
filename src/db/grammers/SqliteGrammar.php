@@ -24,7 +24,7 @@ class SqliteGrammar extends Grammar
 	 * @param \wiggum\services\db\Builder $query
 	 * @return string
 	 */
-	public function compileSelect(Builder $query)
+	public function compileSelect(Builder $query) : string 
 	{
 		if (is_null($query->columns)) {
 			$query->columns = ['*'];
@@ -37,6 +37,7 @@ class SqliteGrammar extends Grammar
 	 * Compile the components necessary for a select clause.
 	 *
 	 * @param \wiggum\services\db\Builder $query
+     * 
 	 * @return array
 	 */
 	protected function compileComponents(Builder $query)
@@ -56,6 +57,7 @@ class SqliteGrammar extends Grammar
 	/**
 	 * @param \wiggum\services\db\Builder $query
 	 * @param array $aggregate
+     * 
 	 * @return string
 	 */
 	protected function compileAggregate(Builder $query, $aggregate)
@@ -74,6 +76,7 @@ class SqliteGrammar extends Grammar
 	 *
 	 * @param \wiggum\services\db\Builder $query
 	 * @param array $columns
+     * 
 	 * @return string
 	 */
 	protected function compileColumns(Builder $query, $columns)
@@ -89,10 +92,11 @@ class SqliteGrammar extends Grammar
 
 	/**
 	 * @param \wiggum\services\db\Builder $query
-	 * @param string $tables
+	 * @param array $tables
+     * 
 	 * @return string
 	 */
-	protected function compileFrom(Builder $query, $tables)
+	protected function compileFrom(Builder $query, array $tables)
 	{
 		return 'from ' . implode(', ', $this->wrapArray($tables));
 	}
@@ -321,7 +325,7 @@ class SqliteGrammar extends Grammar
 		return 'offset ' . (int) $offset;
 	}
 
-	public function compileInsert(Builder $query)
+	public function compileInsert(Builder $query) : string 
 	{
 		$table = $this->wrap($query->from[0]);
 		$columns = $this->columnize(array_keys(reset($query->inserts)));
@@ -333,7 +337,7 @@ class SqliteGrammar extends Grammar
 		return "insert into $table ($columns) values $parameters";
 	}
 
-	public function compileUpdate(Builder $query)
+	public function compileUpdate(Builder $query) : string 
 	{
 		if (isset($query->joins)) {
 			throw new \RuntimeException('SQLite grammar does not support UPDATE with JOIN clauses.');
@@ -367,7 +371,7 @@ class SqliteGrammar extends Grammar
 		return trim($sql);
 	}
 
-	public function compileDelete(Builder $query)
+	public function compileDelete(Builder $query) : string 
 	{
 		if (isset($query->joins)) {
 			throw new \RuntimeException('SQLite grammar does not support DELETE with JOIN clauses.');
@@ -405,7 +409,7 @@ class SqliteGrammar extends Grammar
 	 * @param string $table
 	 * @return array{sql: string, bindings: array}
 	 */
-	public function compileColumnListing(string $table): array
+	public function compileColumnListing(string $table) : array
 	{
 		$table = str_replace("\0", '', $table);
 		$table = str_replace("'", "''", $table);

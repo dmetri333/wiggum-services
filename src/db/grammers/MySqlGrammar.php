@@ -24,7 +24,8 @@ class MySqlGrammar extends Grammar {
 	 * @param \wiggum\services\db\Builder $query
 	 * @return string
 	 */
-	public function compileSelect(Builder $query) {
+	public function compileSelect(Builder $query) : string 
+	{
 		if (is_null($query->columns)) $query->columns = ['*'];
 		
 		return trim(implode(' ', $this->compileComponents($query)));
@@ -34,9 +35,11 @@ class MySqlGrammar extends Grammar {
 	 * Compile the components necessary for a select clause.
 	 *
 	 * @param \wiggum\services\db\Builder $query
+	 * 
 	 * @return array
 	 */
-	protected function compileComponents(Builder $query) {
+	protected function compileComponents(Builder $query) 
+	{
 		$sql = [];
 		
 		foreach ($this->selectComponents as $component) {
@@ -54,9 +57,11 @@ class MySqlGrammar extends Grammar {
 	 * 
 	 * @param \wiggum\services\db\Builder $query
 	 * @param array $aggregate
+	 * 
 	 * @return string
 	 */
-	protected function compileAggregate(Builder $query, $aggregate) {
+	protected function compileAggregate(Builder $query, $aggregate)
+	{
 		
 		$column = $this->columnize($aggregate['columns']);
 		
@@ -72,9 +77,11 @@ class MySqlGrammar extends Grammar {
 	 *
 	 * @param \wiggum\services\db\Builder $query       	
 	 * @param array $columns        	
+	 * 
 	 * @return string
 	 */
-	protected function compileColumns(Builder $query, $columns) {
+	protected function compileColumns(Builder $query, $columns) 
+	{
 		
 		// If the query is performing an aggregating select, we will let that
 		// compiler handle the building of the select clauses.
@@ -91,10 +98,12 @@ class MySqlGrammar extends Grammar {
 	 * Compile the "from" portion of the query.
 	 *
 	 * @param \wiggum\services\db\Builder $query        	
-	 * @param string $tables
+	 * @param array $tables
+	 * 
 	 * @return string
 	 */
-	protected function compileFrom(Builder $query, $tables) {
+	protected function compileFrom(Builder $query, array $tables) 
+	{
 		return 'from ' . implode(', ', $this->wrapArray($tables));
 	}
 	
@@ -105,7 +114,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $joins
 	 * @return string
 	 */
-	protected function compileJoins(Builder $query, $joins) {
+	protected function compileJoins(Builder $query, $joins) 
+	{
 		$sql = [];
 	
 		$query->setBindings([], 'join');
@@ -150,7 +160,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array   $clause
 	 * @return string
 	 */
-	protected function compileJoinConstraint(array $clause) {
+	protected function compileJoinConstraint(array $clause) 
+	{
 		$firstColumn = $this->wrap($clause['firstColumn']);
 
 		if ($clause['where']) {
@@ -173,7 +184,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  \wiggum\services\db\Builder $query
 	 * @return string
 	 */
-	protected function compileWheres(Builder $query) {
+	protected function compileWheres(Builder $query) 
+	{
 		$sql = array();
 
 		if (is_null($query->wheres)) {
@@ -207,7 +219,8 @@ class MySqlGrammar extends Grammar {
 	 * @param array $where
 	 * @return string
 	 */
-	protected function whereNested(Builder $query, $where) {
+	protected function whereNested(Builder $query, $where) 
+	{
 		$nested = $where['query'];
 	
 		return '('.substr($this->compileWheres($nested), 6).')';
@@ -220,7 +233,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $where
 	 * @return string
 	 */
-	protected function whereBasic(Builder $query, $where) {
+	protected function whereBasic(Builder $query, $where) 
+	{
 		return $this->wrap($where['column']).' '.$where['operator'].' ?';
 	}
 	
@@ -231,7 +245,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $where
 	 * @return string
 	 */
-	protected function whereBetween(Builder $query, $where) {
+	protected function whereBetween(Builder $query, $where) 
+	{
 		$between = $where['not'] ? 'not between' : 'between';
 	
 		return $this->wrap($where['column']).' '.$between.' ? and ?';
@@ -244,7 +259,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $where
 	 * @return string
 	 */
-	protected function whereIn(Builder $query, $where) {
+	protected function whereIn(Builder $query, $where) 
+	{
 		$in = $where['not'] ? 'not in' : 'in';
 		
 		if (empty($where['values'])) 
@@ -262,7 +278,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $where
 	 * @return string
 	 */
-	protected function whereNull(Builder $query, $where) {
+	protected function whereNull(Builder $query, $where) 
+	{
 		$null = $where['not'] ? 'not null' : 'null';
 		
 		return $this->wrap($where['column']).' is '.$null;
@@ -275,7 +292,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $where
 	 * @return string
 	 */
-	protected function whereDate(Builder $query, $where) {
+	protected function whereDate(Builder $query, $where) 
+	{
 	    return $this->dateBasedWhere('date', $query, $where);
 	}
 	
@@ -286,7 +304,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $where
 	 * @return string
 	 */
-	protected function whereTime(Builder $query, $where) {
+	protected function whereTime(Builder $query, $where) 
+	{
 	    return $this->dateBasedWhere('time', $query, $where);
 	}
 	
@@ -297,7 +316,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $where
 	 * @return string
 	 */
-	protected function whereDay(Builder $query, $where) {
+	protected function whereDay(Builder $query, $where) 
+	{
 	    return $this->dateBasedWhere('day', $query, $where);
 	}
 	
@@ -308,7 +328,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $where
 	 * @return string
 	 */
-	protected function whereMonth(Builder $query, $where) {
+	protected function whereMonth(Builder $query, $where) 
+	{
 	    return $this->dateBasedWhere('month', $query, $where);
 	}
 	
@@ -319,7 +340,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $where
 	 * @return string
 	 */
-	protected function whereYear(Builder $query, $where) {
+	protected function whereYear(Builder $query, $where) 
+	{
 	    return $this->dateBasedWhere('year', $query, $where);
 	}
 	
@@ -331,7 +353,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $where
 	 * @return string
 	 */
-	protected function dateBasedWhere($type, Builder $query, $where) {
+	protected function dateBasedWhere($type, Builder $query, $where) 
+	{
 	    return $type.'('.$this->wrap($where['column']).') '.$where['operator'].' ?';
 	}
 	
@@ -432,9 +455,11 @@ class MySqlGrammar extends Grammar {
 	 *
 	 * @param  \wiggum\services\db\Builder $query
 	 * @param  array  $values
+	 * 
 	 * @return string
 	 */
-	public function compileInsert(Builder $query) {
+	public function compileInsert(Builder $query) : string 
+	{
 		$table = $this->wrap($query->from[0]);
 	
 		$columns = $this->columnize(array_keys(reset($query->inserts)));
@@ -458,7 +483,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  array  $values
 	 * @return string
 	 */
-	public function compileUpdate(Builder $query) {
+	public function compileUpdate(Builder $query) : string
+	{
 		$table = $this->wrap($query->from[0]);
 	
 		// Each one of the columns in the update statements needs to be wrapped in the
@@ -503,7 +529,8 @@ class MySqlGrammar extends Grammar {
 	 * @param  \wiggum\services\db\Builder $query
 	 * @return string
 	 */
-	public function compileDelete(Builder $query) {
+	public function compileDelete(Builder $query) : string
+	{
 		$table = $this->wrap($query->from[0]);
 	
 		$where = $this->compileWheres($query);
@@ -534,7 +561,8 @@ class MySqlGrammar extends Grammar {
 	 *
 	 * @return string
 	 */
-	public function compileColumnExists() {
+	public function compileColumnExists() 
+	{
 		return 'select column_name from information_schema.columns where table_name = ?';
 	}
 	

@@ -21,13 +21,13 @@ class DatabaseSQLiteQueryBuilderTest extends TestCase
 		$this->dbFile = sys_get_temp_dir() . '/wiggum-services-' . uniqid('', true) . '.sqlite';
 
 		$this->db = new DB([
-			'protocol' => 'sqlite',
+			'connection' => '\wiggum\services\db\connections\Sqlite',
 			'url' => $this->dbFile,
 		]);
-
+        
 		// Minimal schema for exercising the query builder.
-		$this->db->getPDO()->exec('create table users (id integer primary key autoincrement, name text)');
-		$this->db->getPDO()->exec("insert into users (name) values ('Taylor'), ('Jordan')");
+		$this->db->getConnection()->exec('create table users (id integer primary key autoincrement, name text)');
+		$this->db->getConnection()->exec("insert into users (name) values ('Taylor'), ('Jordan')");
 	}
 
 	protected function tearDown(): void

@@ -1,7 +1,7 @@
 <?php
 namespace wiggum\services\db;
 
-class Grammar {
+abstract class Grammar {
 	
 	protected $aggregateFunctions = [
 		'count', 
@@ -11,6 +11,11 @@ class Grammar {
 		'avg',
 		'date'
 	];
+
+	public abstract function compileInsert(Builder $builder) : string;
+	public abstract function compileUpdate(Builder $builder) : string;
+	public abstract function compileDelete(Builder $builder) : string;
+	public abstract function compileSelect(Builder $builder) : string;
 
     /**
      * Remove the leading boolean from a statement.

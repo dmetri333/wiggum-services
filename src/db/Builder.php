@@ -1,7 +1,6 @@
 <?php
 namespace wiggum\services\db;
 
-use \PDO;
 use \Closure;
 use \InvalidArgumentException;
 
@@ -173,7 +172,8 @@ class Builder {
 	/**
 	 * Set the table which the query is targeting.
 	 *
-	 * @param string $table        	
+	 * @param mixed $table        	
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
 	public function from($table) {
@@ -339,9 +339,11 @@ class Builder {
 	 * 
 	 * @param Closure $callback
 	 * @param string $boolean
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function whereNested(Closure $callback, $boolean = 'and') {
+	public function whereNested(Closure $callback, $boolean = 'and') 
+	{
 		$query = (new static($this->db, $this->grammar))->from($this->from);
 	
 		call_user_func($callback, $query);
@@ -763,26 +765,18 @@ class Builder {
 	
 	/**
 	 * 
-	 * @param boolean $assoc
+	 * @param bool $assoc
 	 */
-	public function fetchRow($assoc = false) {
-		if ($assoc) {
-			return $this->db->fetchRow($this->toSql(), $this->getBindings());
-		} else {
-			return $this->db->fetchRow($this->toSql(), $this->getBindings(), PDO::FETCH_OBJ);
-		}
+	public function fetchRow(bool $assoc = false) {
+		return $this->db->fetchRow($this->toSql(), $this->getBindings(), $assoc);
 	}
 	
 	/**
 	 * 
-	 * @param boolean $assoc
+	 * @param bool $assoc
 	 */
-	public function fetchRows($assoc = false) {
-		if ($assoc) {
-			return $this->db->fetchRows($this->toSql(), $this->getBindings());
-		} else {
-			return $this->db->fetchRows($this->toSql(), $this->getBindings(), PDO::FETCH_OBJ);
-		}
+	public function fetchRows(bool $assoc = false) {
+		return $this->db->fetchRows($this->toSql(), $this->getBindings(), $assoc);
 	}
 	
 	/**
@@ -791,7 +785,7 @@ class Builder {
 	 * @return array
 	 */
 	public function fetchAllColumn() {
-		return $this->db->fetchRows($this->toSql(), $this->getBindings(), PDO::FETCH_COLUMN);
+		return $this->db->fetchAllColumn($this->toSql(), $this->getBindings());
 	}
 	
 	/**
@@ -807,8 +801,11 @@ class Builder {
 	 * 
 	 * @param string $columnKey
 	 * @param boolean $assoc
+	 * 
+	 * @return array
 	 */
-	public function fetchRowsWithColumnKey($columnKey = 'id', $assoc = true) {
+	public function fetchRowsWithColumnKey($columnKey = 'id', $assoc = true) : array
+	{
 
 		if (!is_array($this->columns) || count($this->columns) <= 0 || $this->columns[0] == '*') {
 			$this->columns = [$columnKey];
@@ -816,11 +813,7 @@ class Builder {
 		
 		array_unshift($this->columns, $columnKey);
 		
-		if ($assoc) {
-			return $this->db->fetchRows($this->toSql(), $this->getBindings(), PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC);
-		} else {
-			return $this->db->fetchRows($this->toSql(), $this->getBindings(), PDO::FETCH_UNIQUE|PDO::FETCH_OBJ);
-		}
+		return $this->db->fetchRowsWithColumnKey($this->toSql(), $this->getBindings(), $assoc);
 	}
 	
 	/**
@@ -832,7 +825,7 @@ class Builder {
 	
 		$this->columns = [$keyColumn, $valueColumn];
 	
-		return $this->db->fetchRows($this->toSql(), $this->getBindings(), PDO::FETCH_KEY_PAIR);
+		return $this->db->fetchKeyValuePair($this->toSql(), $this->getBindings());
 	}
 	
 	/**
@@ -850,18 +843,6 @@ class Builder {
 	public function fetchObjects($instance) {
 		return $this->db->fetchObjects($this->toSql(), $this->getBindings(), $instance);
 	}
-	
-/*	public function fetchObjectsWithColumnKey($instance, $columnKey = 'id') {
-		
-		if (!is_array($this->columns) || count($this->columns) <= 0 || $this->columns[0] == '*') {
-			$this->columns = [$columnKey];
-		}
-		
-		array_unshift($this->columns, $columnKey);
-		
-		return array_map('reset', $this->db->fetchObjects($this->toSql(), $this->getBindings(), $instance, PDO::FETCH_GROUP|PDO::FETCH_INTO));
-	}
-*/
 	
 	/**
 	 * 
@@ -976,7 +957,7 @@ class Builder {
 	public function getColumnListing() {
 		$compiled = $this->grammar->compileColumnListing($this->from[0]);
 		
-		return $this->db->fetchRows($compiled['sql'], $compiled['bindings'], PDO::FETCH_COLUMN);
+		return $this->db->fetchAllColumn($compiled['sql'], $compiled['bindings']);
 	}
 	
 	/**
@@ -1022,9 +1003,10 @@ class Builder {
 	
 	/**
 	 * 
-	 * @return multitype:unknown
+	 * @return array
 	 */
-	public function getBindings() {
+	public function getBindings() : array
+	{
 		return $this->flattenArray($this->bindings);
 	}
 	
@@ -1032,9 +1014,11 @@ class Builder {
 	/**
 	 * 
 	 * @param array $array
-	 * @return multitype:unknown
+	 * 
+	 * @return array
 	 */
-	private function flattenArray($array) {
+	private function flattenArray(array $array) : array
+	{
 		$return = [];
 	
 		array_walk_recursive($array, function($x) use (&$return) { $return[] = $x; });
