@@ -1,4 +1,5 @@
 vendor/*
+.phpunit.result.cache
 .buildpath
 .project
 .settings/org.eclipse.php.core.prefs
