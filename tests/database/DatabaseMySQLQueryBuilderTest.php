@@ -18,10 +18,6 @@ class FakeMySqlConnection extends Connection
         return new MySqlGrammar();
     }
 
-    public function getConnection()
-    {
-        return null;
-    }
 }
 
 class DatabaseMySQLQueryBuilderTest extends TestCase

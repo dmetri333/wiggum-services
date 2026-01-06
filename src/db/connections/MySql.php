@@ -62,7 +62,7 @@ class MySql extends Connection {
 	 * 
 	 * @return Ambigous
 	 */
-	public function getConnection()
+	public function getPDO()
 	{
 		return $this->pdo;
 	}

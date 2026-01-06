@@ -52,7 +52,7 @@ class Sqlite extends Connection {
 	 * 
 	 * @return Ambigous <NULL, \PDO>
 	 */
-	public function getConnection()
+	public function getPDO()
 	{
 		return $this->pdo;
 	}

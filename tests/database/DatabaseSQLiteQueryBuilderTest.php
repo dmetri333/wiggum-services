@@ -26,8 +26,8 @@ class DatabaseSQLiteQueryBuilderTest extends TestCase
 		]);
         
 		// Minimal schema for exercising the query builder.
-		$this->db->getConnection()->exec('create table users (id integer primary key autoincrement, name text)');
-		$this->db->getConnection()->exec("insert into users (name) values ('Taylor'), ('Jordan')");
+		$this->db->getConnection()->getPDO()->exec('create table users (id integer primary key autoincrement, name text)');
+		$this->db->getConnection()->getPDO()->exec("insert into users (name) values ('Taylor'), ('Jordan')");
 	}
 
 	protected function tearDown(): void

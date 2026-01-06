@@ -26,7 +26,10 @@ class DB {
 	 */
 	public function getConnection() 
 	{
-		return $this->connection->getConnection();
+		if (!$this->connection) {
+			throw new \RuntimeException('DB connection is not configured. Construct DB with a connection config.');
+		}
+		return $this->connection;
 	}
 	
 	/**
@@ -36,7 +39,11 @@ class DB {
 	 */
 	public function table($table) 
 	{
-		$query = new Builder($this, $this->connection->getGrammar());
+		if (!$this->connection) {
+			throw new \RuntimeException('DB connection is not configured. Construct DB with a connection config.');
+		}
+
+		$query = new Builder($this->connection, $this->connection->getGrammar());
 		
 		return $query->from($this->connection->getPrefix().$table);
 	}
@@ -47,6 +54,9 @@ class DB {
 	 */
 	public function beginTransaction() 
 	{
+		if (!$this->connection) {
+			throw new \RuntimeException('DB connection is not configured. Construct DB with a connection config.');
+		}
 		return $this->connection->beginTransaction();
 	}
 	
@@ -56,6 +66,9 @@ class DB {
 	 */
 	public function doRollBack()
 	{
+		if (!$this->connection) {
+			throw new \RuntimeException('DB connection is not configured. Construct DB with a connection config.');
+		}
 		return $this->connection->doRollBack();
 	}
 	
@@ -67,126 +80,10 @@ class DB {
 	 */
 	public function doCommit($selfRollBack = false) 
 	{
+		if (!$this->connection) {
+			throw new \RuntimeException('DB connection is not configured. Construct DB with a connection config.');
+		}
 		return $this->connection->doCommit($selfRollBack);
 	}
-	
-	
-	/**
-	 * Set corresponding fields in an object from result set.
-	 *
-	 * @param string $query
-	 * @param array $values
-	 * @param object $instance - the initialized object that the fields should be set in
-	 * 
-	 * @return object
-	 */
-	public function fetchObject(string $query, array $values, $instance) 
-	{
-		return $this->connection->fetchObject($query, $values, $instance);
-	}
-	
-	/**
-	 * Set corresponding fields in an object from result set.
-	 * 	$instance is the initialized object that the fields should be set in
-	 *
-	 * @param string $query
-	 * @param array $values
-	 * @param object $instance - the initialized object that the fields should be set in
-	 * 
-	 * @return array
-	 */
-	public function fetchObjects(string $query, array $values, $instance) 
-	{
-		return $this->connection->fetchObjects($query, $values, $instance);
-	}
-	
-	/**
-	 *
-	 * @param string $query
-	 * @param array $values
-	 * @param bool $assoc
-	 * 
-	 * @return array|object
-	 */
-	public function fetchRow(string $query, array $values, bool $assoc = false) 
-	{
-		return $this->connection->fetchRow($query, $values, $assoc);
-	}
-	
-	/**
-	 *
-	 * @param string $query
-	 * @param array $values
-	 * @param bool $assoc
-	 * 
-	 * @return array
-	 */
-	public function fetchRows(string $query, array $values, bool $assoc = false) 
-	{
-		return $this->connection->fetchRows($query, $values, $assoc);
-	}
-	
-	/**
-	 * 
-	 * @param string $query
-	 * @param array $values
-	 *
-	 * @return array
-	 */
-	public function fetchAllColumn(string $query, array $values) {
-		return $this->connection->fetchAllColumn($query, $values);
-	}
-
-	/**
-	 * Retrieve first column in results set
-	 *
-	 * @param string $query
-	 * @param array $values
-	 * 
-	 * @return string
-	 */
-	public function fetchColumn(string $query, array $values) 
-	{
-		return $this->connection->fetchColumn($query, $values);
-	}
-	
-	/**
-	 *
-	 * @param string $query
-	 * @param array $values
-	 * @param bool $assoc
-	 * 
-	 * @return array
-	 */
-	public function fetchRowsWithColumnKey(string $query, array $values, bool $assoc = false) 
-	{
-		return $this->connection->fetchRowsWithColumnKey($query, $values);
-	}
-
-	/**
-	 *
-	 * @param string $query
-	 * @param array $values
-	 * 
-	 * @return array
-	 */
-	public function fetchKeyValuePair(string $query, array $values) 
-	{
-		return $this->connection->fetchKeyValuePair($query, $values);
-	}
-	
-	/**
-	 *
-	 * @param string $query
-	 * @param array $values
-	 * @param bool $lastInsId [default=true]
-	 * 
-	 * @return int | boolean
-	 */
-	public function executeQuery(string $query, array $values, bool $lastInsId = true) 
-	{
-		return $this->connection->executeQuery($query, $values, $lastInsId);
-	}
-	
-	
+		
 }

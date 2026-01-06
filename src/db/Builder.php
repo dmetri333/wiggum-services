@@ -45,7 +45,7 @@ class Builder {
 	//whereTime
 	
 	protected $type;
-	protected $db;
+	protected $connection;
 	protected $grammar;
 	protected $bindings = [
 			'select' => [],
@@ -72,8 +72,8 @@ class Builder {
 	public $updates;
 	
 	
-	public function __construct(DB $db, Grammar $grammar) {
-		$this->db = $db;
+	public function __construct(Connection $connection, Grammar $grammar) {
+		$this->connection = $connection;
 		$this->grammar = $grammar;
 	}
 	
@@ -344,7 +344,7 @@ class Builder {
 	 */
 	public function whereNested(Closure $callback, $boolean = 'and') 
 	{
-		$query = (new static($this->db, $this->grammar))->from($this->from);
+		$query = (new static($this->connection, $this->grammar))->from($this->from);
 	
 		call_user_func($callback, $query);
 	
@@ -768,7 +768,7 @@ class Builder {
 	 * @param bool $assoc
 	 */
 	public function fetchRow(bool $assoc = false) {
-		return $this->db->fetchRow($this->toSql(), $this->getBindings(), $assoc);
+		return $this->connection->fetchRow($this->toSql(), $this->getBindings(), $assoc);
 	}
 	
 	/**
@@ -776,7 +776,7 @@ class Builder {
 	 * @param bool $assoc
 	 */
 	public function fetchRows(bool $assoc = false) {
-		return $this->db->fetchRows($this->toSql(), $this->getBindings(), $assoc);
+		return $this->connection->fetchRows($this->toSql(), $this->getBindings(), $assoc);
 	}
 	
 	/**
@@ -785,7 +785,7 @@ class Builder {
 	 * @return array
 	 */
 	public function fetchAllColumn() {
-		return $this->db->fetchAllColumn($this->toSql(), $this->getBindings());
+		return $this->connection->fetchAllColumn($this->toSql(), $this->getBindings());
 	}
 	
 	/**
@@ -794,7 +794,7 @@ class Builder {
 	 * @return string
 	 */
 	public function fetchValue() {
-		return $this->db->fetchColumn($this->toSql(), $this->getBindings());
+		return $this->connection->fetchColumn($this->toSql(), $this->getBindings());
 	}
 	
 	/**
@@ -813,7 +813,7 @@ class Builder {
 		
 		array_unshift($this->columns, $columnKey);
 		
-		return $this->db->fetchRowsWithColumnKey($this->toSql(), $this->getBindings(), $assoc);
+		return $this->connection->fetchRowsWithColumnKey($this->toSql(), $this->getBindings(), $assoc);
 	}
 	
 	/**
@@ -825,7 +825,7 @@ class Builder {
 	
 		$this->columns = [$keyColumn, $valueColumn];
 	
-		return $this->db->fetchKeyValuePair($this->toSql(), $this->getBindings());
+		return $this->connection->fetchKeyValuePair($this->toSql(), $this->getBindings());
 	}
 	
 	/**
@@ -833,7 +833,7 @@ class Builder {
 	 * @param object $instance
 	 */
 	public function fetchObject($instance) {
-		return $this->db->fetchObject($this->toSql(), $this->getBindings(), $instance);
+		return $this->connection->fetchObject($this->toSql(), $this->getBindings(), $instance);
 	}
 	
 	/**
@@ -841,7 +841,7 @@ class Builder {
 	 * @param object $instance
 	 */
 	public function fetchObjects($instance) {
-		return $this->db->fetchObjects($this->toSql(), $this->getBindings(), $instance);
+		return $this->connection->fetchObjects($this->toSql(), $this->getBindings(), $instance);
 	}
 	
 	/**
@@ -853,19 +853,19 @@ class Builder {
 		if ($this->type == 'insert') {
 				
 			$sql = $this->grammar->compileInsert($this);
-			return $this->db->executeQuery($sql, $this->getBindings(), $lastInsId);
+			return $this->connection->executeQuery($sql, $this->getBindings(), $lastInsId);
 				
 		} else if ($this->type == 'update') {
 				
 			$sql = $this->grammar->compileUpdate($this);
 			//bindings done here to make sure the order is correct.
 			$bindings = array_values(array_merge($this->updates, $this->getBindings()));
-			return $this->db->executeQuery($sql, $bindings, false);
+			return $this->connection->executeQuery($sql, $bindings, false);
 				
 		} else if ($this->type == 'delete') {
 			
 			$sql = $this->grammar->compileDelete($this);
-			return $this->db->executeQuery($sql, $this->getBindings(), false);
+			return $this->connection->executeQuery($sql, $this->getBindings(), false);
 		
 		}
 	
@@ -957,7 +957,7 @@ class Builder {
 	public function getColumnListing() {
 		$compiled = $this->grammar->compileColumnListing($this->from[0]);
 		
-		return $this->db->fetchAllColumn($compiled['sql'], $compiled['bindings']);
+		return $this->connection->fetchAllColumn($compiled['sql'], $compiled['bindings']);
 	}
 	
 	/**
