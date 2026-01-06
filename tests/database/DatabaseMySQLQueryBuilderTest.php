@@ -2,75 +2,90 @@
 namespace wiggum\tests\database;
 
 use PHPUnit\Framework\TestCase;
-use wiggum\services\db\Builder;
+use wiggum\services\db\Connection;
 use wiggum\services\db\DB;
 use wiggum\services\db\grammers\MySqlGrammar;
 
+class FakeMySqlConnection extends Connection
+{
+    public function connect(array $config)
+    {
+        $this->prefix = $config['prefix'] ?? '';
+    }
+
+    public function getGrammar(): \wiggum\services\db\Grammar
+    {
+        return new MySqlGrammar();
+    }
+
+    public function getConnection()
+    {
+        return null;
+    }
+}
+
 class DatabaseMySQLQueryBuilderTest extends TestCase
 {
-    protected function getBuilder()
-    {
-        $grammar = new MySqlGrammar();
-        $db = new DB([]);
-        
-        return new Builder($db, $grammar);
+	private ?DB $db = null;
+
+    protected function setUp(): void
+	{
+		parent::setUp();
+
+		// These tests validate SQL generation and bindings only.
+		// Use a fake connection so we don't require a running MySQL server.
+		$this->db = new DB([
+			'connection' => FakeMySqlConnection::class,
+		]);
     }
     
     /* WRAPPING */
     public function testMySqlWrapping()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users');
+		$builder = $this->db->table('users')->select('*');
         $this->assertEquals('select * from `users`', $builder->toSql());
     }
     
     public function testBasicTableWrappingProtectsQuotationMarks()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('some"table');
+		$builder = $this->db->table('some"table')->select('*');
         $this->assertEquals('select * from `some"table`', $builder->toSql());
     }
     
     public function testWrappingProtectsQuotationMarks()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->From('some`table');
+		$builder = $this->db->table('some`table')->select('*');
         $this->assertEquals('select * from `sometable`', $builder->toSql());
     }
     
     public function testAliasWrappingAsWholeConstant()
     {
-        $builder = $this->getBuilder();
-        $builder->select('x.y as foo.bar')->from('baz');
+		$builder = $this->db->table('baz')->select('x.y as foo.bar');
         $this->assertEquals('select `x`.`y` as `foo.bar` from `baz`', $builder->toSql());
     }
   
     public function testBasicTableWrapping()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('public.users');
+		$builder = $this->db->table('public.users')->select('*');
         $this->assertEquals('select * from `public`.`users`', $builder->toSql());
     }
     
     /* BOOLEANS */
     public function testUppercaseLeadingBooleansAreRemoved()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('name', '=', 'Taylor', 'AND');
+		$builder = $this->db->table('users')->select('*')->where('name', '=', 'Taylor', 'AND');
         $this->assertEquals('select * from `users` where `name` = ?', $builder->toSql());
     }
     
     public function testLowercaseLeadingBooleansAreRemoved()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('name', '=', 'Taylor', 'and');
+		$builder = $this->db->table('users')->select('*')->where('name', '=', 'Taylor', 'and');
         $this->assertEquals('select * from `users` where `name` = ?', $builder->toSql());
     }
     
     public function testCaseInsensitiveLeadingBooleansAreRemoved()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('name', '=', 'Taylor', 'And');
+		$builder = $this->db->table('users')->select('*')->where('name', '=', 'Taylor', 'And');
         $this->assertEquals('select * from `users` where `name` = ?', $builder->toSql());
     }
     
@@ -78,35 +93,30 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     /* ALIAS */
     public function testAlias()
     {
-        $builder = $this->getBuilder();
-        $builder->select(['foo as bar'])->from('users');
+        $builder = $this->db->table('users')->select(['foo as bar']);
         $this->assertEquals('select `foo` as `bar` from `users`', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('services')->join('translations AS t', 't.item_id', '=', 'services.id');
+        $builder = $this->db->table('services')->select('*')->join('translations AS t', 't.item_id', '=', 'services.id');
         $this->assertEquals('select * from `services` inner join `translations` as `t` on `t`.`item_id` = `services`.`id`', $builder->toSql());
     }
     
     /* SELECTS - BASIC */
     public function testBasicSelect()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users');
+		$builder = $this->db->table('users')->select('*');
         $this->assertEquals('select * from `users`', $builder->toSql());
     }
     
     public function testAddingSelects()
     {
-        $builder = $this->getBuilder();
-        $builder->select('foo')->addSelect('bar')->addSelect(['baz', 'boom'])->from('users');
+		$builder = $this->db->table('users')->select('foo')->addSelect('bar')->addSelect(['baz', 'boom']);
         $this->assertEquals('select `foo`, `bar`, `baz`, `boom` from `users`', $builder->toSql());
     }
     
     /* DISTINCT */
     public function testBasicSelectDistinct()
     {
-        $builder = $this->getBuilder();
-        $builder->distinct()->select(['foo', 'bar'])->from('users');
+		$builder = $this->db->table('users')->distinct()->select(['foo', 'bar']);
         $this->assertEquals('select distinct `foo`, `bar` from `users`', $builder->toSql());
     }
    
@@ -114,37 +124,32 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     /* WHERE - BASIC */
     public function testWheresBasic()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1);
+		$builder = $this->db->table('users')->select('*')->where('id', '=', 1);
         $this->assertEquals('select * from `users` where `id` = ?', $builder->toSql());
         $this->assertEquals([0 => 1], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->orWhere('email', '=', 'foo');
+		$builder = $this->db->table('users')->select('*')->where('id', '=', 1)->orWhere('email', '=', 'foo');
         $this->assertEquals('select * from `users` where `id` = ? or `email` = ?', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 'foo'], $builder->getBindings());
     }
     
     public function testWhereSoundsLikeOperator()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('name', 'sounds like', 'John Doe');
+		$builder = $this->db->table('users')->select('*')->where('name', 'sounds like', 'John Doe');
         $this->assertEquals('select * from `users` where `name` sounds like ?', $builder->toSql());
         $this->assertEquals(['John Doe'], $builder->getBindings());
     }
     
     public function testWhereWithArray()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where(['foo' => 1, 'bar' => 2]);
+		$builder = $this->db->table('users')->select('*')->where(['foo' => 1, 'bar' => 2]);
         $this->assertEquals('select * from `users` where `foo` = ? and `bar` = ?', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 2], $builder->getBindings());
     }
     
     public function testWheresNested()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('email', '=', 'foo')->orWhere(function ($q) {
+		$builder = $this->db->table('users')->select('*')->where('email', '=', 'foo')->orWhere(function ($q) {
             $q->where('name', '=', 'bar')->where('age', '=', 25);
         });
         
@@ -154,56 +159,46 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     
     public function testWheresNullOperators()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('foo', null);
+        $builder = $this->db->table('users')->select('*')->where('foo', null);
         $this->assertEquals('select * from `users` where `foo` is null', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('foo', '=', null);
+        $builder = $this->db->table('users')->select('*')->where('foo', '=', null);
         $this->assertEquals('select * from `users` where `foo` is null', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('foo', '!=', null);
+        $builder = $this->db->table('users')->select('*')->where('foo', '!=', null);
         $this->assertEquals('select * from `users` where `foo` is not null', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('foo', '<>', null);
+        $builder = $this->db->table('users')->select('*')->where('foo', '<>', null);
         $this->assertEquals('select * from `users` where `foo` is not null', $builder->toSql());
     }
     
     /* WHERE - DATE/TIME */
     public function testWheresDate()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereDate('created_at', '=', 1);
+		$builder = $this->db->table('users')->select('*')->whereDate('created_at', '=', 1);
         $this->assertEquals('select * from `users` where date(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => 1], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->whereDate('created_at', '=', 1, 'or');
+		$builder = $this->db->table('users')->select('*')->where('id', '=', 1)->whereDate('created_at', '=', 1, 'or');
         $this->assertEquals('select * from `users` where `id` = ? or date(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 1], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereDate('created_at', '=', '2015-12-21');
+		$builder = $this->db->table('users')->select('*')->whereDate('created_at', '=', '2015-12-21');
         $this->assertEquals('select * from `users` where date(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => '2015-12-21'], $builder->getBindings());
     }
     
     public function testWheresDay()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereDay('created_at', '=', 1);
+        $builder = $this->db->table('users')->select('*')->whereDay('created_at', '=', 1);
         $this->assertEquals('select * from `users` where day(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => 1], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->whereDay('created_at', '=', 1, 'or');
+        $builder = $this->db->table('users')->select('*')->where('id', '=', 1)->whereDay('created_at', '=', 1, 'or');
         $this->assertEquals('select * from `users` where `id` = ? or day(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 1], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereDay('created_at', '=', 1)->whereDay('created_at', '=', 2, 'or');
+        $builder = $this->db->table('users')->select('*')->whereDay('created_at', '=', 1)->whereDay('created_at', '=', 2, 'or');
         $this->assertEquals('select * from `users` where day(`created_at`) = ? or day(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 2], $builder->getBindings());
  
@@ -211,18 +206,15 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     
     public function testWheresMonth()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereMonth('created_at', '=', 1);
+		$builder = $this->db->table('users')->select('*')->whereMonth('created_at', '=', 1);
         $this->assertEquals('select * from `users` where month(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => 1], $builder->getBindings());
 
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->whereMonth('created_at', '=', 1, 'or');
+        $builder = $this->db->table('users')->select('*')->where('id', '=', 1)->whereMonth('created_at', '=', 1, 'or');
         $this->assertEquals('select * from `users` where `id` = ? or month(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 1], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereMonth('created_at', '=', 5)->whereMonth('created_at', '=', 6, 'or');
+        $builder = $this->db->table('users')->select('*')->whereMonth('created_at', '=', 5)->whereMonth('created_at', '=', 6, 'or');
         $this->assertEquals('select * from `users` where month(`created_at`) = ? or month(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => 5, 1 => 6], $builder->getBindings());
         
@@ -230,18 +222,15 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     
     public function testWheresYear()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereYear('created_at', '=', 2014);
+        $builder = $this->db->table('users')->select('*')->whereYear('created_at', '=', 2014);
         $this->assertEquals('select * from `users` where year(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => 2014], $builder->getBindings());
    
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->whereYear('created_at', '=', 2014, 'or');
+        $builder = $this->db->table('users')->select('*')->where('id', '=', 1)->whereYear('created_at', '=', 2014, 'or');
         $this->assertEquals('select * from `users` where `id` = ? or year(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 2014], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereYear('created_at', '=', 2014)->whereYear('created_at', '=', 2015, 'or');
+        $builder = $this->db->table('users')->select('*')->whereYear('created_at', '=', 2014)->whereYear('created_at', '=', 2015, 'or');
         $this->assertEquals('select * from `users` where year(`created_at`) = ? or year(`created_at`) = ?', $builder->toSql());
         $this->assertEquals([0 => 2014, 1 => 2015], $builder->getBindings());
      
@@ -249,8 +238,7 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
 
     public function testWheresTime()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereTime('created_at', '>=', '22:00');
+		$builder = $this->db->table('users')->select('*')->whereTime('created_at', '>=', '22:00');
         $this->assertEquals('select * from `users` where time(`created_at`) >= ?', $builder->toSql());
         $this->assertEquals([0 => '22:00'], $builder->getBindings());
     }
@@ -258,13 +246,11 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     /* WHERE - BETWEENS */
     public function testWhereBetweens()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereBetween('id', [1, 2]);
+		$builder = $this->db->table('users')->select('*')->whereBetween('id', [1, 2]);
         $this->assertEquals('select * from `users` where `id` between ? and ?', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 2], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereNotBetween('id', [1, 2]);
+		$builder = $this->db->table('users')->select('*')->whereNotBetween('id', [1, 2]);
         $this->assertEquals('select * from `users` where `id` not between ? and ?', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 2], $builder->getBindings());
     }
@@ -273,52 +259,44 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     /* WHERE - IN */
     public function testWhereIns()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereIn('id', [1, 2, 3]);
+		$builder = $this->db->table('users')->select('*')->whereIn('id', [1, 2, 3]);
         $this->assertEquals('select * from `users` where `id` in (?, ?, ?)', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 2, 2 => 3], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->orWhereIn('id', [1, 2, 3]);
+		$builder = $this->db->table('users')->select('*')->where('id', '=', 1)->orWhereIn('id', [1, 2, 3]);
         $this->assertEquals('select * from `users` where `id` = ? or `id` in (?, ?, ?)', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 1, 2 => 2, 3 => 3], $builder->getBindings());
     }
     
     public function testWhereNotIns()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereNotIn('id', [1, 2, 3]);
+		$builder = $this->db->table('users')->select('*')->whereNotIn('id', [1, 2, 3]);
         $this->assertEquals('select * from `users` where `id` not in (?, ?, ?)', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 2, 2 => 3], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->orWhereNotIn('id', [1, 2, 3]);
+		$builder = $this->db->table('users')->select('*')->where('id', '=', 1)->orWhereNotIn('id', [1, 2, 3]);
         $this->assertEquals('select * from `users` where `id` = ? or `id` not in (?, ?, ?)', $builder->toSql());
         $this->assertEquals([0 => 1, 1 => 1, 2 => 2, 3 => 3], $builder->getBindings());
     }
   
     public function testWhereInsEmpty()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereIn('id', []);
+		$builder = $this->db->table('users')->select('*')->whereIn('id', []);
         $this->assertEquals('select * from `users` where 0 = 1', $builder->toSql());
         $this->assertEquals([], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->orWhereIn('id', []);
+		$builder = $this->db->table('users')->select('*')->where('id', '=', 1)->orWhereIn('id', []);
         $this->assertEquals('select * from `users` where `id` = ? or 0 = 1', $builder->toSql());
         $this->assertEquals([0 => 1], $builder->getBindings());
     }
     
     public function testWhereNotInsEmpty()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereNotIn('id', []);
+		$builder = $this->db->table('users')->select('*')->whereNotIn('id', []);
         $this->assertEquals('select * from `users` where 1 = 1', $builder->toSql());
         $this->assertEquals([], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->orWhereNotIn('id', []);
+		$builder = $this->db->table('users')->select('*')->where('id', '=', 1)->orWhereNotIn('id', []);
         $this->assertEquals('select * from `users` where `id` = ? or 1 = 1', $builder->toSql());
         $this->assertEquals([0 => 1], $builder->getBindings());
     }
@@ -326,26 +304,22 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     /* WHERE - NULL */
     public function testWhereNulls()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereNull('id');
+		$builder = $this->db->table('users')->select('*')->whereNull('id');
         $this->assertEquals('select * from `users` where `id` is null', $builder->toSql());
         $this->assertEquals([], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '=', 1)->orWhereNull('id');
+		$builder = $this->db->table('users')->select('*')->where('id', '=', 1)->orWhereNull('id');
         $this->assertEquals('select * from `users` where `id` = ? or `id` is null', $builder->toSql());
         $this->assertEquals([0 => 1], $builder->getBindings());
     }
     
     public function testWhereNotNulls()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereNotNull('id');
+		$builder = $this->db->table('users')->select('*')->whereNotNull('id');
         $this->assertEquals('select * from `users` where `id` is not null', $builder->toSql());
         $this->assertEquals([], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('id', '>', 1)->orWhereNotNull('id');
+		$builder = $this->db->table('users')->select('*')->where('id', '>', 1)->orWhereNotNull('id');
         $this->assertEquals('select * from `users` where `id` > ? or `id` is not null', $builder->toSql());
         $this->assertEquals([0 => 1], $builder->getBindings());
     }
@@ -354,62 +328,52 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     /* GROUP BY */
     public function testGroupBys()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->groupBy('email');
+        $builder = $this->db->table('users')->select('*')->groupBy('email');
         $this->assertEquals('select * from `users` group by `email`', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->groupBy('id', 'email');
+        $builder = $this->db->table('users')->select('*')->groupBy('id', 'email');
         $this->assertEquals('select * from `users` group by `id`, `email`', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->groupBy(['id', 'email']);
+        $builder = $this->db->table('users')->select('*')->groupBy(['id', 'email']);
         $this->assertEquals('select * from `users` group by `id`, `email`', $builder->toSql());
     }
     
     /* ORDER BY */
     public function testOrderBys()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->orderBy('email')->orderBy('age', 'desc');
+		$builder = $this->db->table('users')->select('*')->orderBy('email')->orderBy('age', 'desc');
         $this->assertEquals('select * from `users` order by `email` asc, `age` desc', $builder->toSql());
     }
     
     /* OFFSET/LIMIT */
     public function testLimitsAndOffsets()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->offset(5)->limit(10);
+		$builder = $this->db->table('users')->select('*')->offset(5)->limit(10);
         $this->assertEquals('select * from `users` limit 10 offset 5', $builder->toSql());
     }
    
     /* JOINS */
     public function testJoinsBasic()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', 'users.id', '=', 'contacts.id');
+        $builder = $this->db->table('users')->select('*')->join('contacts', 'users.id', '=', 'contacts.id');
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = `contacts`.`id`', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', 'users.id', '=', 'contacts.id')->leftJoin('photos', 'users.id', '=', 'photos.id');
+        $builder = $this->db->table('users')->select('*')->join('contacts', 'users.id', '=', 'contacts.id')->leftJoin('photos', 'users.id', '=', 'photos.id');
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = `contacts`.`id` left join `photos` on `users`.`id` = `photos`.`id`', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->leftJoinWhere('photos', 'users.id', '=', 'bar')->joinWhere('photos', 'users.id', '=', 'foo');
+        $builder = $this->db->table('users')->select('*')->leftJoinWhere('photos', 'users.id', '=', 'bar')->joinWhere('photos', 'users.id', '=', 'foo');
         $this->assertEquals('select * from `users` left join `photos` on `users`.`id` = ? inner join `photos` on `users`.`id` = ?', $builder->toSql());
         $this->assertEquals(['bar', 'foo'], $builder->getBindings());
     }
     
     public function testJoinComplex()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', function ($j) {
+		$builder = $this->db->table('users')->select('*')->join('contacts', function ($j) {
             $j->on('users.id', '=', 'contacts.id')->orOn('users.name', '=', 'contacts.name');
         });
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = `contacts`.`id` or `users`.`name` = `contacts`.`name`', $builder->toSql());
             
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', function ($j) {
+        $builder = $this->db->table('users')->select('*')->join('contacts', function ($j) {
             $j->where('users.id', '=', 'foo')->where('users.name', '=', 'bar', 'or');
         });
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = ? or `users`.`name` = ?', $builder->toSql());
@@ -422,14 +386,12 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
   
     public function testJoinWhereNull()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', function ($j) {
+		$builder = $this->db->table('users')->select('*')->join('contacts', function ($j) {
             $j->on('users.id', '=', 'contacts.id')->whereNull('contacts.deleted_at');
         });
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = `contacts`.`id` and `contacts`.`deleted_at` is null', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', function ($j) {
+        $builder = $this->db->table('users')->select('*')->join('contacts', function ($j) {
             $j->on('users.id', '=', 'contacts.id')->whereNull('contacts.deleted_at', 'or');
         });
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = `contacts`.`id` or `contacts`.`deleted_at` is null', $builder->toSql());
@@ -437,14 +399,12 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     
     public function testJoinWhereNotNull()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', function ($j) {
+		$builder = $this->db->table('users')->select('*')->join('contacts', function ($j) {
             $j->on('users.id', '=', 'contacts.id')->whereNotNull('contacts.deleted_at');
         });
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = `contacts`.`id` and `contacts`.`deleted_at` is not null', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', function ($j) {
+        $builder = $this->db->table('users')->select('*')->join('contacts', function ($j) {
             $j->on('users.id', '=', 'contacts.id')->whereNotNull('contacts.deleted_at', 'or');
         });
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = `contacts`.`id` or `contacts`.`deleted_at` is not null', $builder->toSql());
@@ -452,15 +412,13 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     
     public function testJoinWhereIn()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', function ($j) {
+		$builder = $this->db->table('users')->select('*')->join('contacts', function ($j) {
             $j->on('users.id', '=', 'contacts.id')->whereIn('contacts.name', [48, 'baz', null]);
         });
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = `contacts`.`id` and `contacts`.`name` in (?, ?, ?)', $builder->toSql());
         $this->assertEquals([48, 'baz', null], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', function ($j) {
+        $builder = $this->db->table('users')->select('*')->join('contacts', function ($j) {
             $j->on('users.id', '=', 'contacts.id')->whereIn('contacts.name', [48, 'baz', null], 'or');
         });
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = `contacts`.`id` or `contacts`.`name` in (?, ?, ?)', $builder->toSql());
@@ -469,15 +427,13 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     
     public function testJoinWhereNotIn()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', function ($j) {
+		$builder = $this->db->table('users')->select('*')->join('contacts', function ($j) {
             $j->on('users.id', '=', 'contacts.id')->whereNotIn('contacts.name', [48, 'baz', null]);
         });
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = `contacts`.`id` and `contacts`.`name` not in (?, ?, ?)', $builder->toSql());
         $this->assertEquals([48, 'baz', null], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->join('contacts', function ($j) {
+        $builder = $this->db->table('users')->select('*')->join('contacts', function ($j) {
             $j->on('users.id', '=', 'contacts.id')->orWhereNotIn('contacts.name', [48, 'baz', null]);
         });
         $this->assertEquals('select * from `users` inner join `contacts` on `users`.`id` = `contacts`.`id` or `contacts`.`name` not in (?, ?, ?)', $builder->toSql());
@@ -488,115 +444,90 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     
     public function testAggregateFunctions()
     {
-        $builder = $this->getBuilder();
-        $builder->select('count(*)')->from('users');
+        $builder = $this->db->table('users')->select('count(*)');
         $this->assertEquals('select count(*) from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('count(*) as bar')->from('users');
+        $builder = $this->db->table('users')->select('count(*) as bar');
         $this->assertEquals('select count(*) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('count(foo) as bar')->from('users');
+        $builder = $this->db->table('users')->select('count(foo) as bar');
         $this->assertEquals('select count(`foo`) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('count(x.y) as bar')->from('users');
+        $builder = $this->db->table('users')->select('count(x.y) as bar');
         $this->assertEquals('select count(`x`.`y`) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('count(x.y) as bar.foo')->from('users');
+        $builder = $this->db->table('users')->select('count(x.y) as bar.foo');
         $this->assertEquals('select count(`x`.`y`) as `bar.foo` from `users`', $builder->toSql());
 
 
-        $builder = $this->getBuilder();
-        $builder->select('sum(*)')->from('users');
+        $builder = $this->db->table('users')->select('sum(*)');
         $this->assertEquals('select sum(*) from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('sum(*) as bar')->from('users');
+        $builder = $this->db->table('users')->select('sum(*) as bar');
         $this->assertEquals('select sum(*) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('sum(`foo`) as bar')->from('users');
+        $builder = $this->db->table('users')->select('sum(`foo`) as bar');
         $this->assertEquals('select sum(`foo`) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('sum(x.y) as bar')->from('users');
+        $builder = $this->db->table('users')->select('sum(x.y) as bar');
         $this->assertEquals('select sum(`x`.`y`) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('sum(x.y) as bar.foo')->from('users');
+        $builder = $this->db->table('users')->select('sum(x.y) as bar.foo');
         $this->assertEquals('select sum(`x`.`y`) as `bar.foo` from `users`', $builder->toSql());
 
 
-        $builder = $this->getBuilder();
-        $builder->select('min(*) as bar')->from('users');
+        $builder = $this->db->table('users')->select('min(*) as bar');
         $this->assertEquals('select min(*) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('min(*) as bar')->from('users');
+        $builder = $this->db->table('users')->select('min(*) as bar');
         $this->assertEquals('select min(*) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('min(foo) as bar')->from('users');
+        $builder = $this->db->table('users')->select('min(foo) as bar');
         $this->assertEquals('select min(`foo`) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('min(x.y) as bar')->from('users');
+        $builder = $this->db->table('users')->select('min(x.y) as bar');
         $this->assertEquals('select min(`x`.`y`) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('min(x.y) as bar.foo')->from('users');
+        $builder = $this->db->table('users')->select('min(x.y) as bar.foo');
         $this->assertEquals('select min(`x`.`y`) as `bar.foo` from `users`', $builder->toSql());
 
 
-        $builder = $this->getBuilder();
-        $builder->select('max(*) as bar')->from('users');
+        $builder = $this->db->table('users')->select('max(*) as bar');
         $this->assertEquals('select max(*) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('max(*) as bar')->from('users');
+        $builder = $this->db->table('users')->select('max(*) as bar');
         $this->assertEquals('select max(*) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('max(foo) as bar')->from('users');
+        $builder = $this->db->table('users')->select('max(foo) as bar');
         $this->assertEquals('select max(`foo`) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('max(x.y) as bar')->from('users');
+        $builder = $this->db->table('users')->select('max(x.y) as bar');
         $this->assertEquals('select max(`x`.`y`) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('max(x.y) as bar.foo')->from('users');
+        $builder = $this->db->table('users')->select('max(x.y) as bar.foo');
         $this->assertEquals('select max(`x`.`y`) as `bar.foo` from `users`', $builder->toSql());
 
 
-        $builder = $this->getBuilder();
-        $builder->select('avg(*) as bar')->from('users');
+        $builder = $this->db->table('users')->select('avg(*) as bar');
         $this->assertEquals('select avg(*) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('avg(*) as bar')->from('users');
+        $builder = $this->db->table('users')->select('avg(*) as bar');
         $this->assertEquals('select avg(*) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('avg(foo) as bar')->from('users');
+        $builder = $this->db->table('users')->select('avg(foo) as bar');
         $this->assertEquals('select avg(`foo`) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('avg(x.y) as bar')->from('users');
+        $builder = $this->db->table('users')->select('avg(x.y) as bar');
         $this->assertEquals('select avg(`x`.`y`) as `bar` from `users`', $builder->toSql());
 
-        $builder = $this->getBuilder();
-        $builder->select('avg(x.y) as bar.foo')->from('users');
+        $builder = $this->db->table('users')->select('avg(x.y) as bar.foo');
         $this->assertEquals('select avg(`x`.`y`) as `bar.foo` from `users`', $builder->toSql());
     }
 
    // public function testAggregateFunctions()
    // {
         
-        //$builder = $this->getBuilder();
+       //$builder = $this->db->table('users');
         //$builder->from('users')->count();
         //$this->assertEquals('select * from `users` limit 10 offset 5', $builder->toSql());
         
@@ -606,8 +537,7 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     /* INSERT */
     public function testInsertMethod()
     {
-        $builder = $this->getBuilder();
-        $builder->from('users')->insert(['email' => 'foo']);
+		$builder = $this->db->table('users')->insert(['email' => 'foo']);
         $this->assertEquals('insert into `users` (`email`) values (?)', $builder->toSql());
         $this->assertEquals(['foo'], $builder->getBindings());
     }
@@ -615,14 +545,12 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     /* UPDATE */
     public function testUpdateMethod()
     {
-        $builder = $this->getBuilder();
-        $builder->from('users')->where('id', '=', 1)->update(['email' => 'foo', 'name' => 'bar']);
+		$builder = $this->db->table('users')->where('id', '=', 1)->update(['email' => 'foo', 'name' => 'bar']);
         $bindings = array_values(array_merge($builder->updates, $builder->getBindings()));
         $this->assertEquals('update `users` set `email` = ?, `name` = ? where `id` = ?', $builder->toSql());
         $this->assertEquals(['foo', 'bar', 1], $bindings);
         
-        $builder = $this->getBuilder();
-        $builder->from('users')->where('id', '=', 1)->orderBy('foo', 'desc')->limit(5)->update(['email' => 'foo', 'name' => 'bar']);
+		$builder = $this->db->table('users')->where('id', '=', 1)->orderBy('foo', 'desc')->limit(5)->update(['email' => 'foo', 'name' => 'bar']);
         $bindings = array_values(array_merge($builder->updates, $builder->getBindings()));
         $this->assertEquals('update `users` set `email` = ?, `name` = ? where `id` = ? order by `foo` desc limit 5', $builder->toSql());
         $this->assertEquals(['foo', 'bar', 1], $bindings);
@@ -632,104 +560,70 @@ class DatabaseMySQLQueryBuilderTest extends TestCase
     /* DELETE */
     public function testDeleteMethod()
     {
-        $builder = $this->getBuilder();
-        $builder->from('users')->where('email', '=', 'foo')->delete();
+		$builder = $this->db->table('users')->where('email', '=', 'foo')->delete();
         $this->assertEquals('delete from `users` where `email` = ?', $builder->toSql());
         $this->assertEquals(['foo'], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->from('users')->delete(1);
+		$builder = $this->db->table('users')->delete(1);
         $this->assertEquals('delete from `users` where `id` = ?', $builder->toSql());
         $this->assertEquals([1], $builder->getBindings());
     
     }
  
     /* JSON */
-    public function testJsonPathEscaping()
-    {
-        $expected = <<<SQL
-select json_unquote(json_extract(`json`, '$."\'))#"'))
-SQL;
-        
-        $builder = $this->getBuilder();
-        $builder->select("json->'))#");
-        $this->assertEquals($expected, $builder->toSql());
-       
-        $builder = $this->getBuilder();
-        $builder->select("json->\'))#");
-        $this->assertEquals($expected, $builder->toSql());
-        
-        $builder = $this->getBuilder();
-        $builder->select("json->\\'))#");
-        $this->assertEquals($expected, $builder->toSql());
-        
-        $builder = $this->getBuilder();
-        $builder->select("json->\\\'))#");
-        $this->assertEquals($expected, $builder->toSql());
-   
-    }
+
     
     public function testWrappingJson()
     {
      
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('items->price', '=', 1);
+        $builder = $this->db->table('users')->select('*')->where('items->price', '=', 1);
         $this->assertEquals('select * from `users` where json_extract(`items`, \'$."price"\') = ?', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('items->price')->from('users')->where('users.items->price', '=', 1)->orderBy('items->price');
+        $builder = $this->db->table('users')->select('items->price')->where('users.items->price', '=', 1)->orderBy('items->price');
         $this->assertEquals('select json_unquote(json_extract(`items`, \'$."price"\')) from `users` where json_extract(`users`.`items`, \'$."price"\') = ? order by json_extract(`items`, \'$."price"\') asc', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('items->price->in_usd', '=', 1);
+        $builder = $this->db->table('users')->select('*')->where('items->price->in_usd', '=', 1);
         $this->assertEquals('select * from `users` where json_extract(`items`, \'$."price"."in_usd"\') = ?', $builder->toSql());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('items->price->in_usd', '=', 1)->where('items->age', '=', 2);
+        $builder = $this->db->table('users')->select('*')->where('items->price->in_usd', '=', 1)->where('items->age', '=', 2);
         $this->assertEquals('select * from `users` where json_extract(`items`, \'$."price"."in_usd"\') = ? and json_extract(`items`, \'$."age"\') = ?', $builder->toSql());
     }
     
     public function testWrappingJsonWithString()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('items->sku', '=', 'foo-bar');
+		$builder = $this->db->table('users')->select('*')->where('items->sku', '=', 'foo-bar');
         $this->assertEquals('select * from `users` where json_extract(`items`, \'$."sku"\') = ?', $builder->toSql());
         $this->assertEquals(['foo-bar'], $builder->getBindings());
     }
     
     public function testWrappingJsonWithInteger()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('items->price', '=', 1);
+		$builder = $this->db->table('users')->select('*')->where('items->price', '=', 1);
         $this->assertEquals('select * from `users` where json_extract(`items`, \'$."price"\') = ?', $builder->toSql());
     }
     
     public function testWrappingJsonWithDouble()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('items->price', '=', 1.5);
+		$builder = $this->db->table('users')->select('*')->where('items->price', '=', 1.5);
         $this->assertEquals('select * from `users` where json_extract(`items`, \'$."price"\') = ?', $builder->toSql());
     }
     
     public function testWrappingJsonWithBoolean()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('items->available', '=', true);
+		$builder = $this->db->table('users')->select('*')->where('items->available', '=', true);
         $this->assertEquals('select * from `users` where json_extract(`items`, \'$."available"\') = ?', $builder->toSql());
     }
     
     public function testWrappingJsonWithBooleanAndIntegerThatLooksLikeOne()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->where('items->available', '=', true)->where('items->active', '=', false)->where('items->number_available', '=', 0);
+		$builder = $this->db->table('users')->select('*')->where('items->available', '=', true)->where('items->active', '=', false)->where('items->number_available', '=', 0);
         $this->assertEquals('select * from `users` where json_extract(`items`, \'$."available"\') = ? and json_extract(`items`, \'$."active"\') = ? and json_extract(`items`, \'$."number_available"\') = ?', $builder->toSql());
     }
     
     public function testUpdateWrappingJson()
     {
         
-        $builder = $this->getBuilder();
-        $builder->from('users')->where('active', '=', 1)->update(['name->first_name' => 'John', 'name->last_name' => 'Doe']);
+		$builder = $this->db->table('users')->where('active', '=', 1)->update(['name->first_name' => 'John', 'name->last_name' => 'Doe']);
         $bindings = array_values(array_merge($builder->updates, $builder->getBindings()));
         $this->assertEquals('update `users` set `name` = json_set(`name`, \'$."first_name"\', ?), `name` = json_set(`name`, \'$."last_name"\', ?) where `active` = ?', $builder->toSql());
         $this->assertEquals(['John', 'Doe', 1], $bindings);
@@ -738,8 +632,7 @@ SQL;
     
     public function testUpdateWrappingNestedJson()
     {
-        $builder = $this->getBuilder();
-        $builder->from('users')->where('active', '=', 1)->update(['meta->name->first_name' => 'John', 'meta->name->last_name' => 'Doe']);
+		$builder = $this->db->table('users')->where('active', '=', 1)->update(['meta->name->first_name' => 'John', 'meta->name->last_name' => 'Doe']);
         $bindings = array_values(array_merge($builder->updates, $builder->getBindings()));
         $this->assertEquals('update `users` set `meta` = json_set(`meta`, \'$."name"."first_name"\', ?), `meta` = json_set(`meta`, \'$."name"."last_name"\', ?) where `active` = ?', $builder->toSql());
         $this->assertEquals(['John', 'Doe', 1], $bindings);
@@ -748,20 +641,17 @@ SQL;
     
     public function testUpdateWithJsonPreparesBindingsCorrectly()
     {
-        $builder = $this->getBuilder();
-        $builder->from('users')->where('id', '=', 0)->update(['options->enable' => false, 'updated_at' => '2015-05-26 22:02:06']);
+		$builder = $this->db->table('users')->where('id', '=', 0)->update(['options->enable' => false, 'updated_at' => '2015-05-26 22:02:06']);
         $bindings = array_values(array_merge($builder->updates, $builder->getBindings()));
         $this->assertEquals( 'update `users` set `options` = json_set(`options`, \'$."enable"\', ?), `updated_at` = ? where `id` = ?', $builder->toSql());
         $this->assertEquals([false, '2015-05-26 22:02:06', 0], $bindings);
         
-        $builder = $this->getBuilder();
-        $builder->from('users')->where('id', '=', 0)->update(['options->size' => 45, 'updated_at' => '2015-05-26 22:02:06']);
+		$builder = $this->db->table('users')->where('id', '=', 0)->update(['options->size' => 45, 'updated_at' => '2015-05-26 22:02:06']);
         $bindings = array_values(array_merge($builder->updates, $builder->getBindings()));
         $this->assertEquals('update `users` set `options` = json_set(`options`, \'$."size"\', ?), `updated_at` = ? where `id` = ?', $builder->toSql());
         $this->assertEquals([45, '2015-05-26 22:02:06', 0], $bindings);
         
-        $builder = $this->getBuilder();
-        $builder->from('users')->update(['options->size' => null]);
+		$builder = $this->db->table('users')->update(['options->size' => null]);
         $bindings = array_values(array_merge($builder->updates, $builder->getBindings()));
         $this->assertEquals('update `users` set `options` = json_set(`options`, \'$."size"\', ?)', $builder->toSql());
         $this->assertEquals([null], $bindings);
@@ -770,50 +660,66 @@ SQL;
     
     public function testWhereJsonContains()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereJsonContains('options', ['en']);
+		$builder = $this->db->table('users')->select('*')->whereJsonContains('options', ['en']);
         $this->assertEquals('select * from `users` where json_contains(`options`, ?)', $builder->toSql());
         $this->assertEquals(['["en"]'], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereJsonContains('users.options->languages', ['en']);
+		$builder = $this->db->table('users')->select('*')->whereJsonContains('users.options->languages', ['en']);
         $this->assertEquals('select * from `users` where json_contains(`users`.`options`, ?, \'$."languages"\')', $builder->toSql());
         $this->assertEquals(['["en"]'], $builder->getBindings());
     }
     
     public function testWhereJsonDoesntContain()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereJsonDoesntContain('options->languages', ['en']);
+		$builder = $this->db->table('users')->select('*')->whereJsonDoesntContain('options->languages', ['en']);
         $this->assertEquals('select * from `users` where not json_contains(`options`, ?, \'$."languages"\')', $builder->toSql());
         $this->assertEquals(['["en"]'], $builder->getBindings());
     }
 
     public function testWhereJsonLength()
     {
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereJsonLength('options', '=', 0);
+		$builder = $this->db->table('users')->select('*')->whereJsonLength('options', '=', 0);
         $this->assertEquals('select * from `users` where json_length(`options`) = ?', $builder->toSql());
         $this->assertEquals([0], $builder->getBindings());
         
-        $builder = $this->getBuilder();
-        $builder->select('*')->from('users')->whereJsonLength('users.options->languages', '>', 0);
+		$builder = $this->db->table('users')->select('*')->whereJsonLength('users.options->languages', '>', 0);
         $this->assertEquals('select * from `users` where json_length(`users`.`options`, \'$."languages"\') > ?', $builder->toSql());
         $this->assertEquals([0], $builder->getBindings());
         
     }
 
+    public function testJsonPathEscaping()
+    {
+        $expected = <<<SQL
+select json_unquote(json_extract(`json`, '$."\'))#"')) from `users`
+SQL;
+        
+        $builder = $this->db->table('users')->select("json->'))#");
+        $this->assertEquals($expected, $builder->toSql());
+       
+        $builder = $this->db->table('users')->select("json->\'))#");
+        $this->assertEquals($expected, $builder->toSql());
+        
+        $builder = $this->db->table('users')->select("json->\\'))#");
+        $this->assertEquals($expected, $builder->toSql());
+        
+        $builder = $this->db->table('users')->select("json->\\\'))#");
+        $this->assertEquals($expected, $builder->toSql());
+   
+    }
+
+
     /*
      public function testJoinsWithNestedConditions()
      {
-     $builder = $this->getBuilder();
+        $builder = $this->db->table('users');
      $builder->select('*')->from('users')->leftJoin('contacts', function ($j) {
      $j->on('users.id', '=', 'contacts.id')->where('contacts.country', '=', 'US')->orWhere('contacts.is_partner', '=', 1);
      });
      $this->assertEquals('select * from `users` left join `contacts` on `users`.`id` = `contacts`.`id` and (`contacts`.`country` = ? or `contacts`.`is_partner` = ?)', $builder->toSql());
      $this->assertEquals(['US', 1], $builder->getBindings());
      
-     $builder = $this->getBuilder();
+    $builder = $this->db->table('users');
      $builder->select('*')->from('users')->leftJoin('contacts', function ($j) {
      $j->on('users.id', '=', 'contacts.id')->where('contacts.is_active', '=', 1)->orOn(function ($j) {
      $j->orWhere(function ($j) {
@@ -829,7 +735,7 @@ SQL;
      
      public function testJoinsWithNestedJoins()
      {
-     $builder = $this->getBuilder();
+    $builder = $this->db->table('users');
      $builder->select('users.id', 'contacts.id', 'contact_types.id')->from('users')->leftJoin('contacts', function ($j) {
      $j->on('users.id', '=', 'contacts.id')->join('contact_types', 'contacts.contact_type_id', '=', 'contact_types.id');
      });
@@ -838,7 +744,7 @@ SQL;
      
      public function testJoinsWithMultipleNestedJoins()
      {
-     $builder = $this->getBuilder();
+    $builder = $this->db->table('users');
      $builder->select('users.id', 'contacts.id', 'contact_types.id', 'countrys.id', 'planets.id')->from('users')->leftJoin('contacts', function ($j) {
      $j->on('users.id', 'contacts.id')
      ->join('contact_types', 'contacts.contact_type_id', '=', 'contact_types.id')
@@ -857,12 +763,12 @@ SQL;
      
      public function testUpdateMethodWithJoins()
      {
-     $builder = $this->getBuilder();
+    $builder = $this->db->table('users');
      $builder->getConnection()->shouldReceive('update')->once()->with('update "users" inner join "orders" on "users"."id" = "orders"."user_id" set "email" = ?, "name" = ? where "users"."id" = ?', ['foo', 'bar', 1])->andReturn(1);
      $result = $builder->from('users')->join('orders', 'users.id', '=', 'orders.user_id')->where('users.id', '=', 1)->update(['email' => 'foo', 'name' => 'bar']);
      $this->assertEquals(1, $result);
      
-     $builder = $this->getBuilder();
+    $builder = $this->db->table('users');
      $builder->getConnection()->shouldReceive('update')->once()->with('update "users" inner join "orders" on "users"."id" = "orders"."user_id" and "users"."id" = ? set "email" = ?, "name" = ?', [1, 'foo', 'bar'])->andReturn(1);
      $result = $builder->from('users')->join('orders', function ($join) {
      $join->on('users.id', '=', 'orders.user_id')
