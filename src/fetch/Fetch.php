@@ -109,19 +109,19 @@ class Fetch {
         }
 
         // get the response headers
-	$headers = [];
-	curl_setopt($ch, CURLOPT_HEADERFUNCTION,
-		function($curl, $header) use (&$headers) {
-			$len = strlen($header);
-			$header = explode(':', $header, 2);
-			if (count($header) < 2) // ignore invalid headers
-				return $len;
+		$headers = [];
+		curl_setopt($ch, CURLOPT_HEADERFUNCTION,
+			function($curl, $header) use (&$headers) {
+				$len = strlen($header);
+				$header = explode(':', $header, 2);
+				if (count($header) < 2) // ignore invalid headers
+					return $len;
 
-			$headers[strtolower(trim($header[0]))][] = trim($header[1]);
-			
-			return $len;
-		}
-	);
+				$headers[strtolower(trim($header[0]))][] = trim($header[1]);
+				
+				return $len;
+			}
+		);
 	    
         $curlResult = curl_exec($ch);
 
@@ -133,7 +133,7 @@ class Fetch {
 
         $responseCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		$curlinfoContentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);   // content type can be in the format application/json;charset=UTF-8
-        $responseContentTypes = explode(';', $curlinfoContentType);
+		$responseContentTypes = explode(';', $curlinfoContentType ?: '');
         $responseContentType = $responseContentTypes[0];
 
 		if ($responseContentType == 'application/json') {
@@ -142,22 +142,19 @@ class Fetch {
 
         if ($curlResult === false) {
             $result = (object) [
-		'payload' => false,
-		'header' => $headers,
-		'status' => (object) ['error' => true, 'code' => $responseCode, 'message' => StatusCodeHelper::getReasonPhrase($responseCode)],
-		'processTime' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
-	    ];
-	} else if (!isset($headers['x-wiggum-api'])) {
-            $result = (object) [
-		'payload' => $result,
-		'header' => $headers,
-		'status' => (object) ['error' => true, 'code' => $responseCode, 'message' => StatusCodeHelper::getReasonPhrase($responseCode)],
-		'processTime' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
-	    ];
-	}
-
-        curl_close($ch);
-
+				'payload' => false,
+				'header' => $headers,
+				'status' => (object) ['error' => true, 'code' => $responseCode, 'message' => StatusCodeHelper::getReasonPhrase($responseCode)],
+				'processTime' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
+			];
+		} else if (!isset($headers['x-wiggum-api'])) {
+			$result = (object) [
+				'payload' => $result,
+				'header' => $headers,
+				'status' => (object) ['error' => true, 'code' => $responseCode, 'message' => StatusCodeHelper::getReasonPhrase($responseCode)],
+				'processTime' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
+			];
+		}
         return $result;
     }
 
