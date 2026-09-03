@@ -83,7 +83,8 @@ class Builder {
 	 * @param array $columns
 	 * @return boolean|\wiggum\services\db\Builder
 	 */
-	public function insert(array $columns) {
+	public function insert(array $columns)
+	{
 		$this->type = 'insert';
 	
 		if (empty($columns)) return true;
@@ -106,9 +107,11 @@ class Builder {
 	/**
 	 * 
 	 * @param array $values
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function update(array $values) {
+	public function update(array $values)
+	{
 		$this->type = 'update';
 	
 		$this->updates = $values;
@@ -119,9 +122,11 @@ class Builder {
 	/**
 	 * 
 	 * @param string $id
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function delete($id = null) {
+	public function delete($id = null)
+	{
 		$this->type = 'delete';
 	
 		if (!is_null($id)) $this->where('id', '=', $id);
@@ -133,10 +138,12 @@ class Builder {
 	/**
 	 * Set the columns to be selected.
 	 *
-	 * @param array $columns        	
+	 * @param array $columns
+	 * 	
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function select($columns = ['*']) {
+	public function select($columns = ['*'])
+	{
 		$this->type = 'select';
 		
 		$this->columns = is_array($columns) ? $columns : func_get_args();
@@ -148,9 +155,11 @@ class Builder {
 	 * Add a new select column to the query.
 	 *
 	 * @param  array|mixed  $column
+	 * 
 	 * @return $this
 	 */
-	public function addSelect($column) {
+	public function addSelect($column)
+	{
 	    $column = is_array($column) ? $column : func_get_args();
 	    
 	    $this->columns = array_merge((array) $this->columns, $column);
@@ -163,7 +172,8 @@ class Builder {
 	 *
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function distinct() {
+	public function distinct()
+	{
 		$this->distinct = true;
 		
 		return $this;
@@ -176,7 +186,8 @@ class Builder {
 	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function from($table) {
+	public function from($table)
+	{
 		$this->from = is_array($table) ? $table : [$table];
 		
 		return $this;
@@ -191,9 +202,11 @@ class Builder {
 	 * @param  string  $secondColumn
 	 * @param  string  $type
 	 * @param  bool    $where
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function join($table, $firstColumn, $operator = null, $secondColumn = null, $type = 'inner', $where = false) {
+	public function join($table, $firstColumn, $operator = null, $secondColumn = null, $type = 'inner', $where = false)
+	{
 		
 		if ($firstColumn instanceof Closure) {
 			
@@ -220,9 +233,11 @@ class Builder {
 	 * @param string $operator
 	 * @param string $secondColumn
 	 * @param string $type
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function joinWhere($table, $firstColumn, $operator, $value, $type = 'inner') {
+	public function joinWhere($table, $firstColumn, $operator, $value, $type = 'inner')
+	{
 		return $this->join($table, $firstColumn, $operator, $value, $type, true);
 	}
 	
@@ -233,9 +248,11 @@ class Builder {
 	 * @param string $firstColumn
 	 * @param string $operator
 	 * @param string $secondColumn
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function leftJoin($table, $firstColumn, $operator = null, $secondColumn = null) {
+	public function leftJoin($table, $firstColumn, $operator = null, $secondColumn = null)
+	{
 		return $this->join($table, $firstColumn, $operator, $secondColumn, 'left');
 	}
 	
@@ -246,9 +263,11 @@ class Builder {
 	 * @param string $firstColumn
 	 * @param string $operator
 	 * @param string $secondColumn
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function leftJoinWhere($table, $firstColumn, $operator, $value) {
+	public function leftJoinWhere($table, $firstColumn, $operator, $value)
+	{
 		return $this->joinWhere($table, $firstColumn, $operator, $value, 'left');
 	}
 	
@@ -259,9 +278,11 @@ class Builder {
 	 * @param string $firstColumn
 	 * @param string $operator
 	 * @param string $secondColumn
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function rightJoin($table, $firstColumn, $operator = null, $secondColumn = null) {
+	public function rightJoin($table, $firstColumn, $operator = null, $secondColumn = null)
+	{
 		return $this->join($table, $firstColumn, $operator, $secondColumn, 'right');
 	}
 	
@@ -272,9 +293,11 @@ class Builder {
 	 * @param string $firstColumn
 	 * @param string $operator
 	 * @param string $secondColumn
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function rightJoinWhere($table, $firstColumn, $operator, $value) {
+	public function rightJoinWhere($table, $firstColumn, $operator, $value)
+	{
 		return $this->joinWhere($table, $firstColumn, $operator, $value, 'right');
 	}
 	
@@ -282,10 +305,11 @@ class Builder {
 	 * Add a join clause manually
 	 * 
 	 * @param JoinClause $joinClause
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function addJoinClause(JoinClause $joinClause) {
-	
+	public function addJoinClause(JoinClause $joinClause)
+	{
 		$this->joins[] = $joinClause;
 	
 		return $this;
@@ -297,9 +321,11 @@ class Builder {
 	 * @param string $operator
 	 * @param string $value
 	 * @param string $boolean
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function where($column, $operator = null, $value = null, $boolean = 'and') {
+	public function where($column, $operator = null, $value = null, $boolean = 'and')
+	{
 		// If the column is an array, we will assume it is an array of key-value pairs
 		// and can add them each as a where clause. We will maintain the boolean we
 		// received when the method was called and pass it into the nested where.
@@ -355,9 +381,11 @@ class Builder {
 	 *
 	 * @param  \wiggum\services\db\Builder $query
 	 * @param  string  $boolean
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function addNestedWhereQuery($query, $boolean = 'and') {
+	public function addNestedWhereQuery($query, $boolean = 'and')
+	{
 		if (count($query->wheres)) {
 			$type = 'Nested';
 	
@@ -374,9 +402,11 @@ class Builder {
 	 * @param string $column
 	 * @param string $operator
 	 * @param string $value
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function orWhere($column, $operator = null, $value = null) {
+	public function orWhere($column, $operator = null, $value = null)
+	{
 	   return $this->where($column, $operator, $value, 'or');
 	}
 	
@@ -386,9 +416,11 @@ class Builder {
 	 * @param array $values
 	 * @param string $boolean
 	 * @param string $not
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function whereBetween($column, array $values, $boolean = 'and', $not = false) {
+	public function whereBetween($column, array $values, $boolean = 'and', $not = false)
+	{
 		$type = 'between';
 	
 		$this->wheres[] = compact('type', 'column', 'boolean', 'not');
@@ -402,9 +434,11 @@ class Builder {
 	 *
 	 * @param string $column
 	 * @param array $values
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function orWhereBetween($column, array $values) {
+	public function orWhereBetween($column, array $values)
+	{
 	    return $this->whereBetween($column, $values, 'or');
 	}
 	
@@ -412,9 +446,11 @@ class Builder {
 	 *
 	 * @param string $column
 	 * @param array $values
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function whereNotBetween($column, array $values, $boolean = 'and') {
+	public function whereNotBetween($column, array $values, $boolean = 'and')
+	{
 	    return $this->whereBetween($column, $values, $boolean, true);
 	}
 
@@ -422,9 +458,11 @@ class Builder {
 	 *
 	 * @param string $column
 	 * @param array $values
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function orWhereNotBetween($column, array $values) {
+	public function orWhereNotBetween($column, array $values)
+	{
 	    return $this->whereBetween($column, $values, 'or', true);
 	}
 	
@@ -434,9 +472,11 @@ class Builder {
 	 * @param array $values
 	 * @param string $boolean
 	 * @param string $not
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function whereIn($column, array $values, $boolean = 'and', $not = false) {
+	public function whereIn($column, array $values, $boolean = 'and', $not = false)
+	{
 		$type = 'In';
 	
 		$this->wheres[] = compact('type', 'column', 'values', 'boolean', 'not');
@@ -450,9 +490,11 @@ class Builder {
 	 *
 	 * @param string $column
 	 * @param array $values
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function orWhereIn($column, array $values) {
+	public function orWhereIn($column, array $values)
+	{
 	    return $this->whereIn($column, $values, 'or');
 	}
 	
@@ -461,9 +503,11 @@ class Builder {
 	 * @param string $column
 	 * @param array $values
 	 * @param string $boolean
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function whereNotIn($column, array $values, $boolean = 'and') {
+	public function whereNotIn($column, array $values, $boolean = 'and')
+	{
 	    return $this->whereIn($column, $values, $boolean, true);
 	}
 	
@@ -471,9 +515,11 @@ class Builder {
 	 *
 	 * @param string $column
 	 * @param array $values
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function orWhereNotIn($column, array $values) {
+	public function orWhereNotIn($column, array $values)
+	{
 	    return $this->whereIn($column, $values, 'or', true);
 	}
 	
@@ -482,9 +528,11 @@ class Builder {
 	 * @param string $column
 	 * @param string $boolean
 	 * @param string $not
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function whereNull($column, $boolean = 'and', $not = false) {
+	public function whereNull($column, $boolean = 'and', $not = false)
+	{
 		$type = 'Null';
 	
 		$this->wheres[] = compact('type', 'column', 'boolean', 'not');
@@ -495,9 +543,11 @@ class Builder {
 	/**
 	 *
 	 * @param string $column
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function orWhereNull($column) {
+	public function orWhereNull($column)
+	{
 	    return $this->whereNull($column, 'or');
 	}
 	
@@ -505,18 +555,22 @@ class Builder {
 	 *
 	 * @param string $column
 	 * @param string $boolean
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function whereNotNull($column, $boolean = 'and') {
+	public function whereNotNull($column, $boolean = 'and')
+	{
 	    return $this->whereNull($column, $boolean, true);
 	}
 	
 	/**
 	 *
 	 * @param string $column
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function orWhereNotNull($column) {
+	public function orWhereNotNull($column)
+	{
 	    return $this->whereNull($column, 'or', true);
 	}
 	
@@ -526,6 +580,7 @@ class Builder {
 	 * @param string $operator
 	 * @param string $value
 	 * @param string $boolean
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
 	public function whereDate($column, $operator, $value, $boolean = 'and')
@@ -539,6 +594,7 @@ class Builder {
 	 * @param string $operator
 	 * @param string $value
 	 * @param string $boolean
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
 	public function whereDay($column, $operator, $value, $boolean = 'and')
@@ -552,6 +608,7 @@ class Builder {
 	 * @param string $operator
 	 * @param string $value
 	 * @param string $boolean
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
 	public function whereMonth($column, $operator, $value, $boolean = 'and')
@@ -565,6 +622,7 @@ class Builder {
 	 * @param string $operator
 	 * @param string $value
 	 * @param string $boolean
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
 	public function whereYear($column, $operator, $value, $boolean = 'and')
@@ -579,6 +637,7 @@ class Builder {
 	 * @param  string   $operator
 	 * @param  \DateTimeInterface|string  $value
 	 * @param  string   $boolean
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
 	public function whereTime($column, $operator, $value = null, $boolean = 'and')
@@ -594,6 +653,7 @@ class Builder {
 	 * @param  string  $operator
 	 * @param  int  $value
 	 * @param  string  $boolean
+	 * 
 	 * @return $this
 	 */
 	protected function addDateBasedWhere($type, $column, $operator, $value, $boolean = 'and')
@@ -610,6 +670,7 @@ class Builder {
 	 * @param  mixed  $value
 	 * @param  string  $boolean
 	 * @param  bool  $not
+	 * 
 	 * @return $this
 	 */
 	public function whereJsonContains($column, $value, $boolean = 'and', $not = false)
@@ -627,6 +688,7 @@ class Builder {
 	 *
 	 * @param  string  $column
 	 * @param  mixed  $value
+	 * 
 	 * @return $this
 	 */
 	public function orWhereJsonContains($column, $value)
@@ -639,6 +701,7 @@ class Builder {
 	 * @param  string  $column
 	 * @param  mixed  $value
 	 * @param  string  $boolean
+	 * 
 	 * @return $this
 	 */
 	public function whereJsonDoesntContain($column, $value, $boolean = 'and')
@@ -650,6 +713,7 @@ class Builder {
 	 *
 	 * @param  string  $column
 	 * @param  mixed  $value
+	 * 
 	 * @return $this
 	 */
 	public function orWhereJsonDoesntContain($column, $value)
@@ -664,6 +728,7 @@ class Builder {
      * @param  mixed  $operator
      * @param  mixed  $value
      * @param  string  $boolean
+	 * 
      * @return $this
      */
     public function whereJsonLength($column, $operator, $value = null, $boolean = 'and')
@@ -677,12 +742,13 @@ class Builder {
         return $this;
 	}
 
-	  /**
+	/**
      * Add a "or where JSON length" clause to the query.
      *
      * @param  string  $column
      * @param  mixed  $operator
      * @param  mixed  $value
+	 * 
      * @return $this
      */
     public function orWhereJsonLength($column, $operator, $value = null)
@@ -693,9 +759,11 @@ class Builder {
 	/**
 	 *
 	 * @param  array|string $column,...
+	 * 
 	 * @return $this
 	 */
-	public function groupBy() {
+	public function groupBy()
+	{
 		foreach (func_get_args() as $arg) {
 			$this->groups = array_merge((array) $this->groups, is_array($arg) ? $arg : [$arg]);
 		}
@@ -707,9 +775,11 @@ class Builder {
 	 * 
 	 * @param string $column
 	 * @param string $direction
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function orderBy($column, $direction = 'asc') {
+	public function orderBy($column, $direction = 'asc')
+	{
 		$direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
 	
 		$this->orders[] = compact('column', 'direction');
@@ -721,9 +791,11 @@ class Builder {
 	 * 
 	 * @param int $value
 	 * @param int $offset
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function limit($value, $offset = null) {
+	public function limit($value, $offset = null)
+	{
 		if ($value > 0) 
 			$this->limit = $value;
 	
@@ -736,9 +808,11 @@ class Builder {
 	/**
 	 * 
 	 * @param int $value
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function offset($value) {
+	public function offset($value)
+	{
 		$this->offset = max(0, $value);
 
 		return $this;
@@ -749,8 +823,8 @@ class Builder {
 	 *
 	 * @return string
 	 */
-	public function toSql() {
-		
+	public function toSql()
+	{
 		if ($this->type == 'insert') {
 			return $this->grammar->compileInsert($this);
 		} else if ($this->type == 'update') {
@@ -760,14 +834,14 @@ class Builder {
 		} else {
 			return $this->grammar->compileSelect($this);
 		}
-		
 	}
 	
 	/**
 	 * 
 	 * @param bool $assoc
 	 */
-	public function fetchRow(bool $assoc = false) {
+	public function fetchRow(bool $assoc = false)
+	{
 		return $this->connection->fetchRow($this->toSql(), $this->getBindings(), $assoc);
 	}
 	
@@ -775,7 +849,8 @@ class Builder {
 	 * 
 	 * @param bool $assoc
 	 */
-	public function fetchRows(bool $assoc = false) {
+	public function fetchRows(bool $assoc = false)
+	{
 		return $this->connection->fetchRows($this->toSql(), $this->getBindings(), $assoc);
 	}
 	
@@ -784,7 +859,8 @@ class Builder {
 	 *
 	 * @return array
 	 */
-	public function fetchAllColumn() {
+	public function fetchAllColumn()
+	{
 		return $this->connection->fetchAllColumn($this->toSql(), $this->getBindings());
 	}
 	
@@ -793,7 +869,8 @@ class Builder {
 	 *
 	 * @return string
 	 */
-	public function fetchValue() {
+	public function fetchValue()
+	{
 		return $this->connection->fetchColumn($this->toSql(), $this->getBindings());
 	}
 	
@@ -821,7 +898,8 @@ class Builder {
 	 * @param string $keyColumn
 	 * @param string $valueColumn
 	 */
-	public function fetchKeyValuePair($keyColumn, $valueColumn) {
+	public function fetchKeyValuePair($keyColumn, $valueColumn)
+	{
 	
 		$this->columns = [$keyColumn, $valueColumn];
 	
@@ -832,7 +910,8 @@ class Builder {
 	 * 
 	 * @param object $instance
 	 */
-	public function fetchObject($instance) {
+	public function fetchObject($instance)
+	{
 		return $this->connection->fetchObject($this->toSql(), $this->getBindings(), $instance);
 	}
 	
@@ -840,7 +919,8 @@ class Builder {
 	 * 
 	 * @param object $instance
 	 */
-	public function fetchObjects($instance) {
+	public function fetchObjects($instance)
+	{
 		return $this->connection->fetchObjects($this->toSql(), $this->getBindings(), $instance);
 	}
 	
@@ -848,7 +928,8 @@ class Builder {
 	 * 
 	 * @param boolean $lastInsId
 	 */
-	public function execute($lastInsId = false) {
+	public function execute($lastInsId = false)
+	{
 	
 		if ($this->type == 'insert') {
 				
@@ -874,9 +955,11 @@ class Builder {
 	/**
 	 * 
 	 * @param string $columns
+	 * 
 	 * @return number
 	 */
-	public function count($columns = '*') {
+	public function count($columns = '*')
+	{
 		if (!is_array($columns)) {
 			$columns = [$columns];
 		}
@@ -887,9 +970,11 @@ class Builder {
 	/**
 	 * 
 	 * @param string $column
+	 * 
 	 * @return integer
 	 */
-	public function sum($column) {
+	public function sum($column)
+	{
 		$result = $this->aggregate('sum', [$column]);
 	
 		return $result ?: 0;
@@ -898,27 +983,33 @@ class Builder {
 	/**
 	 * 
 	 * @param string $column
+	 * 
 	 * @return integer
 	 */
-	public function min($column) {
+	public function min($column)
+	{
 		return $this->aggregate('min', [$column]);
 	}
 	
 	/**
 	 * 
 	 * @param string $column
+	 * 
 	 * @return integer
 	 */
-	public function max($column) {
+	public function max($column)
+	{
 		return $this->aggregate('max', [$column]);
 	}
 	
 	/**
 	 * 
 	 * @param string $column
+	 * 
 	 * @return integer
 	 */
-	public function avg($column) {
+	public function avg($column)
+	{
 		return $this->aggregate('avg', [$column]);
 	}
 	
@@ -926,9 +1017,11 @@ class Builder {
 	 * 
 	 * @param string $function
 	 * @param array $columns
+	 * 
 	 * @return integer
 	 */
-	public function aggregate($function, $columns = ['*']) {
+	public function aggregate($function, $columns = ['*'])
+	{
 		$this->aggregate = compact('function', 'columns');
 	
 		// We will also back up the columns and select bindings since the 
@@ -954,7 +1047,8 @@ class Builder {
 	 * 
 	 * @return array
 	 */
-	public function getColumnListing() {
+	public function getColumnListing()
+	{
 		$compiled = $this->grammar->compileColumnListing($this->from[0]);
 		
 		return $this->connection->fetchAllColumn($compiled['sql'], $compiled['bindings']);
@@ -965,11 +1059,13 @@ class Builder {
 	 *
 	 * @param  mixed   $value
 	 * @param  string  $type
+	 * 
 	 * @return $this
 	 * 
 	 * @throws \InvalidArgumentException
 	 */
-	public function addBinding($value, $type) {
+	public function addBinding($value, $type)
+	{
 		if (!array_key_exists($type, $this->bindings)) {
 			throw new InvalidArgumentException("Invalid binding type: {$type}.");
 		}
@@ -988,10 +1084,13 @@ class Builder {
 	 * 
 	 * @param array $bindings
 	 * @param string $type
+	 * 
 	 * @throws InvalidArgumentException
+	 * 
 	 * @return \wiggum\services\db\Builder
 	 */
-	public function setBindings(array $bindings, $type) {
+	public function setBindings(array $bindings, $type)
+	{
 		if (!array_key_exists($type, $this->bindings)) {
 			throw new InvalidArgumentException("Invalid binding type: {$type}.");
 		}
