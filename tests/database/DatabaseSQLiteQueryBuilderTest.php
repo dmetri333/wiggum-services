@@ -52,6 +52,67 @@ class DatabaseSQLiteQueryBuilderTest extends TestCase
 		$this->assertEquals('Taylor', $user->name);
 	}
 
+	public function testConnectionSupportsBooleanAndPdoFetchModes()
+	{
+		$connection = $this->db->getConnection();
+
+		$object = $connection->fetchRow('select id, name from users where id = ?', [1]);
+		$this->assertIsObject($object);
+		$this->assertEquals('Taylor', $object->name);
+
+		$assoc = $connection->fetchRow('select id, name from users where id = ?', [1], true);
+		$this->assertIsArray($assoc);
+		$this->assertEquals('Taylor', $assoc['name']);
+
+		$numeric = $connection->fetchRow('select id, name from users where id = ?', [1], \PDO::FETCH_NUM);
+		$this->assertSame([1, 'Taylor'], $numeric);
+
+		$grouped = $connection->fetchRows(
+			'select substr(name, 1, 1) as initial, id, name from users order by id',
+			[],
+			\PDO::FETCH_GROUP | \PDO::FETCH_OBJ
+		);
+		$this->assertArrayHasKey('T', $grouped);
+		$this->assertArrayHasKey('J', $grouped);
+		$this->assertIsObject($grouped['T'][0]);
+		$this->assertEquals('Taylor', $grouped['T'][0]->name);
+	}
+
+	public function testConnectionBindsEachValueIndependently()
+	{
+		$row = $this->db->getConnection()->fetchRow(
+			'select ? as first_value, ? as second_value, ? as third_value',
+			[42, 'Taylor', null],
+			\PDO::FETCH_ASSOC
+		);
+
+		$this->assertSame(42, $row['first_value']);
+		$this->assertSame('Taylor', $row['second_value']);
+		$this->assertNull($row['third_value']);
+	}
+
+	public function testBuilderFetchRowsGrouped()
+	{
+		$groupedObjects = $this->db->table('users')
+			->select(['id', 'name'])
+			->orderBy('id')
+			->fetchRowsGrouped('name');
+
+		$this->assertArrayHasKey('Taylor', $groupedObjects);
+		$this->assertIsObject($groupedObjects['Taylor'][0]);
+		$this->assertEquals(1, $groupedObjects['Taylor'][0]->id);
+		$this->assertObjectNotHasProperty('name', $groupedObjects['Taylor'][0]);
+
+		$groupedArrays = $this->db->table('users')
+			->select(['id', 'name'])
+			->orderBy('id')
+			->fetchRowsGrouped('name', true);
+
+		$this->assertIsArray($groupedArrays['Jordan'][0]);
+		$this->assertSame(2, $groupedArrays['Jordan'][0]['id']);
+		$this->assertArrayNotHasKey('name', $groupedArrays['Jordan'][0]);
+	}
+
 	/* WRAPPING */
 	public function testSqliteWrapping()
 	{
@@ -175,16 +236,37 @@ class DatabaseSQLiteQueryBuilderTest extends TestCase
 
 	public function testInsertUpdateDeleteExecute()
 	{
-		$newId = $this->db->table('users')->insert(['name' => 'Sam'])->execute(true);
-		$this->assertIsNumeric($newId);
+		$insertResult = $this->db->table('users')->insert(['name' => 'Sam'])->execute();
+		$this->assertTrue($insertResult->success);
+		$this->assertSame(1, $insertResult->affectedRows);
+		$this->assertNotNull($insertResult->lastInsertId);
+		$newId = (int) $insertResult->lastInsertId;
 
-		$this->db->table('users')->where('id', '=', (int) $newId)->update(['name' => 'Samuel'])->execute(false);
+		$updateResult = $this->db->table('users')->where('id', '=', $newId)->update(['name' => 'Samuel'])->execute();
+		$this->assertTrue($updateResult->success);
+		$this->assertSame(1, $updateResult->affectedRows);
+		$this->assertNull($updateResult->lastInsertId);
 		$updated = $this->db->table('users')->where('id', '=', (int) $newId)->fetchRow();
 		$this->assertEquals('Samuel', $updated->name);
 
-		$this->db->table('users')->where('id', '=', (int) $newId)->delete()->execute(false);
+		$deleteResult = $this->db->table('users')->where('id', '=', $newId)->delete()->execute();
+		$this->assertTrue($deleteResult->success);
+		$this->assertSame(1, $deleteResult->affectedRows);
+		$this->assertNull($deleteResult->lastInsertId);
 		$deleted = $this->db->table('users')->where('id', '=', (int) $newId)->fetchRow();
 		$this->assertNull($deleted);
+	}
+
+	public function testExecuteQueryReturnsFailureResultOnPdoException()
+	{
+		$result = $this->db->getConnection()->executeQuery(
+			'insert into users (id, name) values (?, ?)',
+			[1, 'Duplicate']
+		);
+
+		$this->assertFalse($result->success);
+		$this->assertSame(0, $result->affectedRows);
+		$this->assertNull($result->lastInsertId);
 	}
 
 	public function testGetColumnListing()
@@ -208,7 +290,7 @@ class DatabaseSQLiteQueryBuilderTest extends TestCase
 		$this->db->table('users')
 			->join('users as u2', 'u2.id', '=', 'users.id')
 			->update(['name' => 'X'])
-			->execute(false);
+			->execute();
 	}
 
 	public function testDeleteWithJoinThrows()
@@ -217,6 +299,6 @@ class DatabaseSQLiteQueryBuilderTest extends TestCase
 		$this->db->table('users')
 			->join('users as u2', 'u2.id', '=', 'users.id')
 			->delete()
-			->execute(false);
+			->execute();
 	}
 }

@@ -3,6 +3,7 @@ namespace wiggum\services\db;
 
 use \Closure;
 use \InvalidArgumentException;
+use \PDO;
 
 class Builder {
 	
@@ -853,6 +854,32 @@ class Builder {
 	{
 		return $this->connection->fetchRows($this->toSql(), $this->getBindings(), $assoc);
 	}
+
+	/**
+	 * Fetch rows grouped by a selected column.
+	 * The grouping column is moved to the first position, becomes the array key,
+	 * and is omitted from each row unless it is also included by a wildcard.
+	 *
+	 * @param string $columnKey
+	 * @param bool $assoc
+	 * @return array
+	 */
+	public function fetchRowsGrouped(string $columnKey = 'id', bool $assoc = false): array
+	{
+		if (!is_array($this->columns) || count($this->columns) <= 0 || $this->columns[0] == '*') {
+			$this->columns = [$columnKey, '*'];
+		} else {
+			$this->columns = array_values(array_filter(
+				$this->columns,
+				fn ($column) => $column !== $columnKey
+			));
+			array_unshift($this->columns, $columnKey);
+		}
+
+		$fetchMode = PDO::FETCH_GROUP | ($assoc ? PDO::FETCH_ASSOC : PDO::FETCH_OBJ);
+
+		return $this->connection->fetchRows($this->toSql(), $this->getBindings(), $fetchMode);
+	}
 	
 	/**
 	 * Fetch all values of a single column from the result set into an array.
@@ -889,8 +916,10 @@ class Builder {
 		}
 		
 		array_unshift($this->columns, $columnKey);
-		
-		return $this->connection->fetchRowsWithColumnKey($this->toSql(), $this->getBindings(), $assoc);
+
+		$fetchMode = PDO::FETCH_UNIQUE | ($assoc ? PDO::FETCH_ASSOC : PDO::FETCH_OBJ);
+
+		return $this->connection->fetchRows($this->toSql(), $this->getBindings(), $fetchMode);
 	}
 	
 	/**
@@ -925,28 +954,29 @@ class Builder {
 	}
 	
 	/**
-	 * 
-	 * @param boolean $lastInsId
+	 * Execute the pending write query.
+	 *
+	 * @return ExecutionResult|null
 	 */
-	public function execute($lastInsId = false)
+	public function execute()
 	{
 	
 		if ($this->type == 'insert') {
 				
 			$sql = $this->grammar->compileInsert($this);
-			return $this->connection->executeQuery($sql, $this->getBindings(), $lastInsId);
+			return $this->connection->executeQuery($sql, $this->getBindings(), true);
 				
 		} else if ($this->type == 'update') {
 				
 			$sql = $this->grammar->compileUpdate($this);
 			//bindings done here to make sure the order is correct.
 			$bindings = array_values(array_merge($this->updates, $this->getBindings()));
-			return $this->connection->executeQuery($sql, $bindings, false);
+			return $this->connection->executeQuery($sql, $bindings);
 				
 		} else if ($this->type == 'delete') {
 			
 			$sql = $this->grammar->compileDelete($this);
-			return $this->connection->executeQuery($sql, $this->getBindings(), false);
+			return $this->connection->executeQuery($sql, $this->getBindings());
 		
 		}
 	

@@ -4,6 +4,7 @@ namespace wiggum\services\db\connections;
 use \PDO;
 use \PDOException;
 use \wiggum\services\db\Connection;
+use \wiggum\services\db\ExecutionResult;
 use \wiggum\services\db\Grammar;
 use \wiggum\services\db\grammers\MySqlGrammar;
 
@@ -35,6 +36,7 @@ class MySql extends Connection {
 		try {
 			$options = [
 				PDO::ATTR_PERSISTENT => true,
+				PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 				PDO::ATTR_EMULATE_PREPARES => false,
 				PDO::ATTR_STRINGIFY_FETCHES => false
 			];
@@ -139,14 +141,7 @@ class MySql extends Connection {
 		try {
 			$statement = $this->pdo->prepare($query);
 			$statement->setFetchMode(PDO::FETCH_INTO, $instance);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
+			$this->bindValues($statement, $values);
 
 			if ($statement->execute()) {
 				$obj = $statement->fetch(PDO::FETCH_INTO);
@@ -178,14 +173,7 @@ class MySql extends Connection {
 		try {
 			$statement = $this->pdo->prepare($query);
 			$statement->setFetchMode(PDO::FETCH_INTO, $instance);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
+			$this->bindValues($statement, $values);
 
 			if ($statement->execute()) {
 				while (($obj = $statement->fetch(PDO::FETCH_INTO))) {
@@ -206,26 +194,19 @@ class MySql extends Connection {
 	 *
 	 * @param string $query
 	 * @param array $values
-	 * @param bool $assoc
+	 * @param bool|int $fetchMode  true=assoc, false=obj, int=custom
 	 * 
 	 * @return array|object
 	 */
-	public function fetchRow(string $query, array $values, bool $assoc = false) 
+	public function fetchRow(string $query, array $values, bool|int $fetchMode = false)
 	{
 
-		$fetchMode = $assoc ? PDO::FETCH_ASSOC : PDO::FETCH_OBJ;
+		$fetchMode = $this->resolveFetchMode($fetchMode);
 
 		$row = null;
 		try {
 			$statement = $this->pdo->prepare($query);
-			
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
+			$this->bindValues($statement, $values);
 
 			if ($statement->execute()) {
 				$row = $statement->fetch($fetchMode);
@@ -244,67 +225,19 @@ class MySql extends Connection {
 	 *
 	 * @param string $query
 	 * @param array $values
-	 * @param bool $assoc
+	 * @param bool|int $fetchMode  true=assoc, false=obj, int=custom
 	 * 
 	 * @return array
 	 */
-	public function fetchRows(string $query, array $values, bool $assoc = false) : array
+	public function fetchRows(string $query, array $values, bool|int $fetchMode = false) : array
 	{
 		
-		$fetchMode = $assoc ? PDO::FETCH_ASSOC : PDO::FETCH_OBJ;
+		$fetchMode = $this->resolveFetchMode($fetchMode);
 
 		$rows = [];
 		try {
 			$statement = $this->pdo->prepare($query);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
-
-			if ($statement->execute()) {
-				$rows = $statement->fetchAll($fetchMode);
-			} else {
-				$errorInfo = $statement->errorInfo();
-				error_log($errorInfo[2]);
-			}
-		} catch (PDOException $e) {
-			error_log($e->getMessage());
-		}
-		return $rows;
-	}
-
-	/**
-	 *
-	 * @param string $query
-	 * @param array $values
-	 * @param bool $assoc
-	 * 
-	 * @return array
-	 */
-	public function fetchRowsWithColumnKey(string $query, array $values, bool $assoc = false) : array
-	{
-		
-		if ($assoc) {
-			$fetchMode = PDO::FETCH_UNIQUE|PDO::FETCH_ASSOC;
-		} else {
-			$fetchMode = PDO::FETCH_UNIQUE|PDO::FETCH_OBJ;
-		}
-		
-		$rows = [];
-		try {
-			$statement = $this->pdo->prepare($query);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
+			$this->bindValues($statement, $values);
 
 			if ($statement->execute()) {
 				$rows = $statement->fetchAll($fetchMode);
@@ -330,14 +263,7 @@ class MySql extends Connection {
 		$rows = [];
 		try {
 			$statement = $this->pdo->prepare($query);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
+			$this->bindValues($statement, $values);
 
 			if ($statement->execute()) {
 				$rows = $statement->fetchAll(PDO::FETCH_COLUMN);
@@ -365,14 +291,7 @@ class MySql extends Connection {
 		$col = null;
 		try {
 			$statement = $this->pdo->prepare($query);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
+			$this->bindValues($statement, $values);
 
 			if ($statement->execute()) {
 				$col = $statement->fetchColumn();
@@ -399,14 +318,7 @@ class MySql extends Connection {
 		$rows = [];
 		try {
 			$statement = $this->pdo->prepare($query);
-
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
+			$this->bindValues($statement, $values);
 
 			if ($statement->execute()) {
 				$rows = $statement->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -424,42 +336,30 @@ class MySql extends Connection {
 	 *
 	 * @param string $query
 	 * @param array $values
-	 * @param bool $lastInsId [default=true]
+	 * @param bool $captureLastInsertId
 	 * 
-	 * @return int | boolean
+	 * @return ExecutionResult
 	 */
-	public function executeQuery(string $query, array $values, bool $lastInsId = true) 
+	public function executeQuery(string $query, array $values, bool $captureLastInsertId = false): ExecutionResult
 	{
-		$result = false;
-
 		try {
 			$statement = $this->pdo->prepare($query);
+			$this->bindValues($statement, $values);
+			$statement->execute();
 
-			foreach ($values as $key => &$val) {
-			    if (is_int($val)) {
-			        $statement->bindParam($key+1, $val, PDO::PARAM_INT);
-			    } else {
-			        $statement->bindParam($key+1, $val);
-			    }
-			}
-			
-			if ($statement->execute()) {
-				if ($lastInsId) {
-					$result = $this->pdo->lastInsertId();
-				} else {
-					$result = true;
-				}
-			} else {
-				$this->transactionError = true;
-				$errorInfo = $statement->errorInfo();
-				error_log($errorInfo[2]);
-			}
+			$lastInsertId = $captureLastInsertId ? $this->pdo->lastInsertId() : false;
+
+			return new ExecutionResult(
+				true,
+				$statement->rowCount(),
+				$lastInsertId === false ? null : $lastInsertId
+			);
 		} catch (PDOException $e) {
 			$this->transactionError = true;
 			error_log($e->getMessage());
-		}
 
-		return $result;
+			return new ExecutionResult(false, 0, null);
+		}
 	}
 	
 }
