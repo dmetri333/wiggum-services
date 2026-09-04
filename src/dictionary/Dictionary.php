@@ -3,7 +3,7 @@ namespace wiggum\services\dictionary;
 
 class Dictionary {
 	
-	protected $dictionary;
+	protected array $dictionary;
 	
 	/**
 	 * 
@@ -19,7 +19,7 @@ class Dictionary {
 	 * @param string $prefix
 	 * @return mixed
 	 */
-	public function get($key, $prefix = null) {
+	public function get(string $key, ?string $prefix = null) {
 	    
 	    $key = isset($prefix) ? $prefix.'.'.$key : $key;
 	    if (!isset($this->dictionary[$key])) {
@@ -36,7 +36,7 @@ class Dictionary {
 	 * @param string $prefix
 	 * @return mixed
 	 */
-	public function replace($key, array $replace, $prefix = null) {
+	public function replace(string $key, array $replace, ?string $prefix = null) {
 	    return str_replace(array_keys($replace), array_values($replace), $this->get($key, $prefix));
 	}
 

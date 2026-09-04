@@ -3,8 +3,8 @@ namespace wiggum\services\console;
 
 class ProgressBar {
     
-    private $units;
-    private $index;
+    private int $units;
+    private int $index;
     
     /**
      * 

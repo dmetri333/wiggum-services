@@ -3,10 +3,10 @@ namespace wiggum\services\console;
 
 class Input {
     
-	private $accept;
-	private $headsUp;
-	private $password;
-	private $multiLine;
+	private array $accept;
+	private bool $headsUp;
+	private bool $password;
+	private bool $multiLine;
 	
 	/**
 	 * 
@@ -70,6 +70,7 @@ class Input {
     /**
      *
      * @param string $str
+     * 
      * @return string
      */
     public function prompt(string $str): string

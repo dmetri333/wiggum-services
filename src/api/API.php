@@ -27,13 +27,14 @@ class API {
 	        'processTime' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
 	    ];
 	    
-            if ($code >= 100 && $code <= 599)
-                $response->withStatus($code, $message);	    
+		if ($code >= 100 && $code <= 599)
+			$response->withStatus($code, $message);	    
             
 	    $response->setContentType('application/json');
-	    $response->addHeader('Access-Control-Allow-Origin', '*');
-            $response->addHeader('X-Wiggum-API', 'true');
+		$response->addHeader('Access-Control-Allow-Origin', '*');
+        $response->addHeader('X-Wiggum-API', 'true');
 	    $response->setOutput(json_encode($output, JSON_NUMERIC_CHECK));
+
 	    return $response;
 	}
 

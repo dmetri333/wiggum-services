@@ -3,11 +3,11 @@ namespace wiggum\services\console;
 
 class Output {
     
-    protected $foreground;
-    protected $background;
-    protected $styles;
+    protected string $foreground;
+    protected string $background;
+    protected array $styles;
    
-    private $foregroundCodes = [
+    private array $foregroundCodes = [
         Console::BLACK         => '0;30',
         Console::DARK_GREY     => '1;30',
         Console::RED           => '0;31',
@@ -26,7 +26,7 @@ class Output {
         Console::WHITE         => '1;37'
     ];
     
-    private $backgroundCodes = [
+    private array $backgroundCodes = [
 		Console::BLACK         => '40',
 	    Console::RED           => '41',
 	    Console::GREEN         => '42',
@@ -59,6 +59,7 @@ class Output {
     /**
      * 
      * @param string $color
+     * 
      * @return Output
      */
     public function color(string $color): Output
@@ -71,6 +72,7 @@ class Output {
     /**
      * 
      * @param string $color
+     * 
      * @return Output
      */
     public function background(string $color): Output

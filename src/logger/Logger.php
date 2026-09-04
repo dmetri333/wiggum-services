@@ -14,7 +14,7 @@ class Logger extends AbstractLogger
      * options
      * @var array
      */
-    protected $options = [
+    protected array $options = [
         'level' => LogLevel::DEBUG
     ];
 
@@ -22,7 +22,7 @@ class Logger extends AbstractLogger
      * Log Levels
      * @var array
      */
-    protected $logLevels = [
+    protected array $logLevels = [
         LogLevel::EMERGENCY => 0,
         LogLevel::ALERT     => 1,
         LogLevel::CRITICAL  => 2,

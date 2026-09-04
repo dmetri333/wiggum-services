@@ -5,7 +5,7 @@ use \wiggum\commons\helpers\StatusCodeHelper;
 
 class Fetch {
 	
-	private $options = [
+	private array $options = [
 		'method' => 'GET',
 		'connectTimeout' => 10,
 		'debug' => false,
@@ -24,11 +24,11 @@ class Fetch {
 	 *
 	 * @param string $url
 	 * @param array $options
-	 * @return void
 	 */
 	public function get(string $url, array $options = [])
     {
 		$options['method'] = 'GET';
+
 		return $this->request($url, $options);
 	}
 
@@ -36,7 +36,6 @@ class Fetch {
 	 *
 	 * @param string $url
 	 * @param array $options
-	 * @return void
 	 */
 	public function post(string $url, array $options = [])
     {

@@ -1,6 +1,7 @@
 <?php
 namespace wiggum\services\errorHandler;
 
+use \wiggum\foundation\Application;
 use \wiggum\commons\Handler;
 use \wiggum\http\Request;
 use \wiggum\http\Response;
@@ -8,13 +9,13 @@ use \wiggum\commons\template\Template;
 
 class ErrorHandler extends Handler {
 	
-	protected $app;
-	protected $verboseMode; 
-	protected $templates;
+	protected Application $app;
+	protected bool $verboseMode; 
+	protected array $templates;
 	
 	/**
 	 */
-	public function __construct(\wiggum\foundation\Application $app) {
+	public function __construct(Application $app) {
 		$this->app = $app;
 		$this->verboseMode = $app->config->get('app.environment', 'development') == 'development' ? true : false;
 		$this->templates = $app->config->get('services.errorHandler', []);
@@ -28,9 +29,11 @@ class ErrorHandler extends Handler {
 	 * @param \Throwable $error  	
 	 *        	
 	 * @return Response
+	 * 
 	 * @throws UnexpectedValueException
 	 */
-	public function __invoke(Request $request, Response $response, \Throwable $error) {
+	public function __invoke(Request $request, Response $response, \Throwable $error) : Response
+	{
 		$output = '';
 		$contentType = $this->determineContentType($request);
 		switch ($contentType) {
@@ -56,6 +59,7 @@ class ErrorHandler extends Handler {
 		$response->setContentType($contentType);
 		$response->addHeader('Access-Control-Allow-Origin', '*');
 		$response->setOutput($output);
+
 		return $response;
 	}
 	
@@ -66,7 +70,8 @@ class ErrorHandler extends Handler {
 	 *
 	 * @return string
 	 */
-	protected function renderErrorMessage(\Throwable $error, $type) {
+	protected function renderErrorMessage(\Throwable $error, string $type) : string
+	{
 		if (!isset($this->templates[$type]))
 			throw new UnexpectedValueException('Cannot render template type "' . $type . '"');
 		

@@ -9,14 +9,14 @@ use \wiggum\http\Response;
 
 class ExceptionHandler extends Handler {
 	
-	protected $app;
-	protected $verboseMode;
-	protected $templates;
+	protected Application $app;
+	protected bool $verboseMode;
+	protected array $templates;
 	
 	/**
 	 *
 	 */
-	public function __construct(\wiggum\foundation\Application $app) {
+	public function __construct(Application $app) {
 		$this->app = $app;
 		$this->verboseMode = $app->config->get('app.environment', 'development') == 'development' ? true : false;
 		$this->templates = $app->config->get('services.exceptionHandler', []);
@@ -28,7 +28,8 @@ class ExceptionHandler extends Handler {
 	 * @param Response $response
 	 * @param \Exception $exception
 	 */
-	public function __invoke(Request $request, Response $response, \Exception $exception) {
+	public function __invoke(Request $request, Response $response, \Exception $exception) : Response
+	{
 		$output = '';
 
 		$contentType = $this->determineContentType($request);
@@ -57,6 +58,7 @@ class ExceptionHandler extends Handler {
 		$response->setContentType($contentType);
 		$response->addHeader('Access-Control-Allow-Origin', '*');
 		$response->setOutput($output);
+
 		return $response;
 	}
 	
@@ -67,7 +69,8 @@ class ExceptionHandler extends Handler {
 	 *
 	 * @return string
 	 */
-	protected function renderErrorMessage(\Exception $error, $type) {
+	protected function renderErrorMessage(\Exception $error, string $type) : string
+	{
 		
 		if (!isset($this->templates[$type]))
 			throw new UnexpectedValueException('Cannot render template type "' . $type . '"');
